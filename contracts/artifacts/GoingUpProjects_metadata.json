@@ -1,0 +1,697 @@
+{
+	"compiler": {
+		"version": "0.8.14+commit.80d49f37"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "creator",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "projectId",
+						"type": "uint256"
+					},
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "id",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "name",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "description",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "started",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "ended",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "primaryUrl",
+								"type": "string"
+							},
+							{
+								"internalType": "string[]",
+								"name": "tags",
+								"type": "string[]"
+							},
+							{
+								"internalType": "address",
+								"name": "owner",
+								"type": "address"
+							},
+							{
+								"internalType": "address[]",
+								"name": "members",
+								"type": "address[]"
+							},
+							{
+								"internalType": "address[]",
+								"name": "invites",
+								"type": "address[]"
+							},
+							{
+								"internalType": "bool",
+								"name": "active",
+								"type": "bool"
+							},
+							{
+								"internalType": "bool",
+								"name": "allowMembersToEdit",
+								"type": "bool"
+							},
+							{
+								"internalType": "uint256[]",
+								"name": "scores",
+								"type": "uint256[]"
+							},
+							{
+								"internalType": "string[]",
+								"name": "reviews",
+								"type": "string[]"
+							},
+							{
+								"internalType": "string[]",
+								"name": "extraData",
+								"type": "string[]"
+							}
+						],
+						"indexed": false,
+						"internalType": "struct GoingUpProjects.Project",
+						"name": "createdProject",
+						"type": "tuple"
+					}
+				],
+				"name": "ProjectCreated",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "updater",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "projectId",
+						"type": "uint256"
+					},
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "id",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "name",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "description",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "started",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "ended",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "primaryUrl",
+								"type": "string"
+							},
+							{
+								"internalType": "string[]",
+								"name": "tags",
+								"type": "string[]"
+							},
+							{
+								"internalType": "address",
+								"name": "owner",
+								"type": "address"
+							},
+							{
+								"internalType": "address[]",
+								"name": "members",
+								"type": "address[]"
+							},
+							{
+								"internalType": "address[]",
+								"name": "invites",
+								"type": "address[]"
+							},
+							{
+								"internalType": "bool",
+								"name": "active",
+								"type": "bool"
+							},
+							{
+								"internalType": "bool",
+								"name": "allowMembersToEdit",
+								"type": "bool"
+							},
+							{
+								"internalType": "uint256[]",
+								"name": "scores",
+								"type": "uint256[]"
+							},
+							{
+								"internalType": "string[]",
+								"name": "reviews",
+								"type": "string[]"
+							},
+							{
+								"internalType": "string[]",
+								"name": "extraData",
+								"type": "string[]"
+							}
+						],
+						"indexed": false,
+						"internalType": "struct GoingUpProjects.Project",
+						"name": "updatedProject",
+						"type": "tuple"
+					}
+				],
+				"name": "ProjectUpdated",
+				"type": "event"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "admins",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "description",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "started",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "ended",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "primaryUrl",
+						"type": "string"
+					},
+					{
+						"internalType": "string[]",
+						"name": "tags",
+						"type": "string[]"
+					}
+				],
+				"name": "create",
+				"outputs": [],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "owner",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "price",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "projects",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "id",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "description",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "started",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "ended",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "primaryUrl",
+						"type": "string"
+					},
+					{
+						"internalType": "address",
+						"name": "owner",
+						"type": "address"
+					},
+					{
+						"internalType": "bool",
+						"name": "active",
+						"type": "bool"
+					},
+					{
+						"internalType": "bool",
+						"name": "allowMembersToEdit",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "targetAddress",
+						"type": "address"
+					},
+					{
+						"internalType": "bool",
+						"name": "isAdmin",
+						"type": "bool"
+					}
+				],
+				"name": "setAdmin",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "newPrice",
+						"type": "uint256"
+					}
+				],
+				"name": "setPrice",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "newOwner",
+						"type": "address"
+					}
+				],
+				"name": "transferOwnership",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "id",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "description",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "started",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "ended",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "primaryUrl",
+						"type": "string"
+					},
+					{
+						"internalType": "string[]",
+						"name": "tags",
+						"type": "string[]"
+					}
+				],
+				"name": "update",
+				"outputs": [],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "tokenAddress",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "tokenID",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes",
+						"name": "data",
+						"type": "bytes"
+					}
+				],
+				"name": "withdrawERC1155",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "tokenAddress",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "withdrawERC20",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "tokenAddress",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "tokenID",
+						"type": "uint256"
+					}
+				],
+				"name": "withdrawERC721",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "withdrawFunds",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"author": "Mark Ibanez",
+			"events": {
+				"ProjectCreated(address,uint256,(uint256,string,string,uint256,uint256,string,string[],address,address[],address[],bool,bool,uint256[],string[],string[]))": {
+					"params": {
+						"createdProject": "Project struct",
+						"creator": "Creator address",
+						"projectId": "Created project auto id"
+					}
+				},
+				"ProjectUpdated(address,uint256,(uint256,string,string,uint256,uint256,string,string[],address,address[],address[],bool,bool,uint256[],string[],string[]))": {
+					"params": {
+						"projectId": "Project ID",
+						"updatedProject": "Project struct",
+						"updater": "Updater address"
+					}
+				}
+			},
+			"kind": "dev",
+			"methods": {
+				"create(string,string,uint256,uint256,string,string[])": {
+					"params": {
+						"description": "Project description",
+						"ended": "Project ended (Unix timestamp, set to zero if you do not want to set any value)",
+						"name": "Project name",
+						"primaryUrl": "Project primary url",
+						"started": "Project start (Unix timestamp, set to zero if you do not want to set any value)",
+						"tags": "Project tags"
+					}
+				},
+				"setAdmin(address,bool)": {
+					"params": {
+						"isAdmin": "Admin flag to set (true means address is admin, false mean address is not admin)",
+						"targetAddress": "Target address to set admin flag"
+					}
+				},
+				"setPrice(uint256)": {
+					"params": {
+						"newPrice": "New price for creating and updating projects"
+					}
+				},
+				"transferOwnership(address)": {
+					"params": {
+						"newOwner": "New contract owner address"
+					}
+				},
+				"update(uint256,string,string,uint256,uint256,string,string[])": {
+					"params": {
+						"description": "Project description",
+						"ended": "Project ended (Unix timestamp, set to zero if you do not want to set any value)",
+						"id": "Project ID",
+						"name": "Project name",
+						"primaryUrl": "Project primary url",
+						"started": "Project start (Unix timestamp, set to zero if you do not want to set any value)",
+						"tags": "Project tags"
+					}
+				},
+				"withdrawERC1155(address,uint256,uint256,bytes)": {
+					"params": {
+						"tokenAddress": "Address of ERC1155 contract",
+						"tokenID": "Token ID to withdraw"
+					}
+				},
+				"withdrawERC20(address,uint256)": {
+					"params": {
+						"amount": "Amount to transfer",
+						"tokenAddress": "Address of ERC20 contract"
+					}
+				},
+				"withdrawERC721(address,uint256)": {
+					"params": {
+						"tokenAddress": "Address of ERC721 contract",
+						"tokenID": "Token ID to withdraw"
+					}
+				}
+			},
+			"title": "GoingUP Platform Projects Smart Contract",
+			"version": 1
+		},
+		"userdoc": {
+			"events": {
+				"ProjectCreated(address,uint256,(uint256,string,string,uint256,uint256,string,string[],address,address[],address[],bool,bool,uint256[],string[],string[]))": {
+					"notice": "This event is emitted when a project is created"
+				},
+				"ProjectUpdated(address,uint256,(uint256,string,string,uint256,uint256,string,string[],address,address[],address[],bool,bool,uint256[],string[],string[]))": {
+					"notice": "This event is emitted when a project is created"
+				}
+			},
+			"kind": "user",
+			"methods": {
+				"create(string,string,uint256,uint256,string,string[])": {
+					"notice": "Create a project"
+				},
+				"setAdmin(address,bool)": {
+					"notice": "Sets the admin flag for address"
+				},
+				"setPrice(uint256)": {
+					"notice": "Sets the price for creating and updating projects"
+				},
+				"transferOwnership(address)": {
+					"notice": "Transfer ownership of contract"
+				},
+				"update(uint256,string,string,uint256,uint256,string,string[])": {
+					"notice": "Update a project"
+				},
+				"withdrawERC1155(address,uint256,uint256,bytes)": {
+					"notice": "Withdraw ERC1155 token"
+				},
+				"withdrawERC20(address,uint256)": {
+					"notice": "Withdraw ERC20 tokens"
+				},
+				"withdrawERC721(address,uint256)": {
+					"notice": "Withdraw ERC721 token"
+				},
+				"withdrawFunds()": {
+					"notice": "Withdraw native tokens (matic)"
+				}
+			},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/GoingUpProjects.sol": "GoingUpProjects"
+		},
+		"evmVersion": "london",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": true,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"@openzeppelin/contracts/token/ERC1155/IERC1155.sol": {
+			"keccak256": "0x8e93de94c9062ebc94fb7e2e3929b0781ac6a2b7772e2f7a59045861c93e5be9",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://f920a631bf986c610fe573d3c70a2bb6f224f86f4a8550016470c7ee476c9ab5",
+				"dweb:/ipfs/QmYzsyVMfnaREKHcHv5RPS8Xg5r1Q38E2SDsGBTnXeFWzb"
+			]
+		},
+		"@openzeppelin/contracts/token/ERC20/IERC20.sol": {
+			"keccak256": "0x9750c6b834f7b43000631af5cc30001c5f547b3ceb3635488f140f60e897ea6b",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://5a7d5b1ef5d8d5889ad2ed89d8619c09383b80b72ab226e0fe7bde1636481e34",
+				"dweb:/ipfs/QmebXWgtEfumQGBdVeM6c71McLixYXQP5Bk6kKXuoY4Bmr"
+			]
+		},
+		"@openzeppelin/contracts/token/ERC721/IERC721.sol": {
+			"keccak256": "0x0d4de01fe5360c38b4ad2b0822a12722958428f5138a7ff47c1720eb6fa52bba",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://77724cecdfba8814632ab58737c2b0f2d4ad2d532bc614aee559b5593c1152f0",
+				"dweb:/ipfs/QmUcE6gXyv7CQh4sUdcDABYKGTovTe1zLMZSEq95nkc3ph"
+			]
+		},
+		"@openzeppelin/contracts/utils/introspection/IERC165.sol": {
+			"keccak256": "0x447a5f3ddc18419d41ff92b3773fb86471b1db25773e07f877f548918a185bf1",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://be161e54f24e5c6fae81a12db1a8ae87bc5ae1b0ddc805d82a1440a68455088f",
+				"dweb:/ipfs/QmP7C3CHdY9urF4dEMb9wmsp1wMxHF6nhA2yQE5SKiPAdy"
+			]
+		},
+		"contracts/GoingUpProjects.sol": {
+			"keccak256": "0x9aefe32a0ea194b34caf0133b429ee906a7d48fb8a499ad26fe610347053d726",
+			"license": "UNLICENSED",
+			"urls": [
+				"bzz-raw://dfb91fea2fb4a118b851b11256c33ced5aecf720d172972fda6eebc519fe7400",
+				"dweb:/ipfs/QmXibVJESHQmvMkUhmeVrTefUoj1VSmPTY6T4BoXVGcVBJ"
+			]
+		}
+	},
+	"version": 1
+}
