@@ -51,7 +51,7 @@ contract GoingUpProjects {
     /// @notice Sets the admin flag for address
     /// @param targetAddress Target address to set admin flag
     /// @param isAdmin Admin flag to set (true means address is admin, false mean address is not admin)
-    function setAdmin(address targetAddress, bool isAdmin) public onlyAdmin {
+    function setAdmin(address targetAddress, bool isAdmin) public onlyOwner {
         admins[targetAddress] = isAdmin;
     }
 
