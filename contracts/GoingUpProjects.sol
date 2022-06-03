@@ -26,7 +26,7 @@ contract GoingUpProjects {
         string[] extraData;
     }
 
-    constructor () {        
+    constructor () {
         owner = msg.sender;
     }
 
@@ -69,7 +69,7 @@ contract GoingUpProjects {
     mapping(uint256 => Project) public projects;
     modifier canEditProject(uint256 projectId) {
         Project memory project = projects[projectId];
-        
+
         if (msg.sender == project.owner) {
             _;
         } else {
@@ -90,8 +90,8 @@ contract GoingUpProjects {
                 }
 
                 _;
-            }            
-        }   
+            }
+        }
     }
     /// @notice Create a project
     /// @param name Project name
@@ -125,7 +125,7 @@ contract GoingUpProjects {
     /// @param ended Project ended (Unix timestamp, set to zero if you do not want to set any value)
     /// @param primaryUrl Project primary url
     /// @param tags Project tags
-    function update(uint256 id, string memory name, string memory description, uint started, uint ended, string memory primaryUrl, string[] memory tags) public payable sentEnough canEditProject(id) {        
+    function update(uint256 id, string memory name, string memory description, uint started, uint ended, string memory primaryUrl, string[] memory tags) public payable sentEnough canEditProject(id) {
         projects[id].name = name;
         projects[id].description = description;
         projects[id].started = started;
@@ -133,7 +133,6 @@ contract GoingUpProjects {
         projects[id].primaryUrl = primaryUrl;
         projects[id].tags = tags;
         projects[id].active = true;
-        emit ProjectUpdated(msg.sender, id, projects[id]);
     }
     /// @notice Invite a collaborator to project
     /// @param collaborator Collaborator's address
@@ -161,7 +160,7 @@ contract GoingUpProjects {
         IERC721 tokenContract = IERC721(tokenAddress);
         tokenContract.safeTransferFrom(address(this), msg.sender, tokenID);
     }
-    
+
     /// @notice Withdraw ERC1155 token
     /// @param tokenAddress Address of ERC1155 contract
     /// @param tokenID Token ID to withdraw
@@ -169,4 +168,4 @@ contract GoingUpProjects {
         IERC1155 tokenContract = IERC1155(tokenAddress);
         tokenContract.safeTransferFrom(address(this), msg.sender, tokenID, amount, data);
     }
-} 
+}
