@@ -1,8 +1,16 @@
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
+const mockData = require('./mock-data.json');
 
-let contract, contractAsDeployer, contractAsOwner, contractAsAdmin1, contractAsAdmin2, contractAsPublic1;
-let deployer, owner, admin1, admin2, public1;
+let contract,
+    contractAsDeployer,
+    contractAsOwner,
+    contractAsAdmin1,
+    contractAsAdmin2,
+    contractAsPublic1,
+    contractAsProjectOwner1,
+    contractAsProjectOwner2;
+let deployer, owner, admin1, admin2, public1, projectOwner1, projectOwner2;
 
 describe('Intialize', () => {
     it('Deploy GoingUpProjects Contract', async () => {
@@ -17,9 +25,15 @@ describe('Intialize', () => {
         contract = await GoingUpProjects.deploy();
         await contract.deployed();
 
-        [contractAsDeployer, contractAsOwner, contractAsAdmin1, contractAsAdmin2, contractAsPublic1] = (
-            await ethers.getSigners()
-        ).map((signer) => contract.connect(signer));
+        [
+            contractAsDeployer,
+            contractAsOwner,
+            contractAsAdmin1,
+            contractAsAdmin2,
+            contractAsPublic1,
+            contractAsProjectOwner1,
+            contractAsProjectOwner2,
+        ] = (await ethers.getSigners()).map((signer) => contract.connect(signer));
     });
 });
 
@@ -74,12 +88,68 @@ describe('Contract variable "price"', () => {
 
     it('Non admin address tries to set price', async () => {
         await expect(contractAsPublic1.setPrice('25000000000000000')).to.be.revertedWith('not admin');
-    })
+    });
 
     it('Admin address sets price', async () => {
         await contractAsAdmin1.setPrice('25000000000000000');
         expect(await contractAsPublic1.price()).to.equal('25000000000000000');
         await contractAsAdmin2.setPrice('35000000000000000');
         expect(await contractAsPublic1.price()).to.equal('35000000000000000');
-    })
+    });
+});
+
+describe('Create a project', () => {
+    it ('Create project without sending payment', async () => {
+        const data = mockData[0];
+        await expect(
+            contractAsProjectOwner1.create(
+                data.name,
+                data.description,
+                data.started,
+                data.ended,
+                data.primaryUrl,
+                data.tags
+            )
+        ).to.revertedWith('did not send enough');
+    });
+
+    it ('Create project but not send enough payment', async () => {
+        const data = mockData[0];
+        await expect(
+            contractAsProjectOwner1.create(
+                data.name,
+                data.description,
+                data.started,
+                data.ended,
+                data.primaryUrl,
+                data.tags,
+                { value: '1000000000000000' }
+            )
+        ).to.revertedWith('did not send enough');
+    });
+
+    it('Project Owners creates their respective projects', async () => {
+        const price = await contractAsProjectOwner1.price();
+        const data = mockData[0];
+        await contractAsProjectOwner1.create(
+            data.name,
+            data.description,
+            data.started,
+            data.ended,
+            data.primaryUrl,
+            data.tags,
+            { value: price }
+        );
+
+        const data2 = mockData[1];
+        await contractAsProjectOwner2.create(
+            data2.name,
+            data2.description,
+            data2.started,
+            data2.ended,
+            data.primaryUrl,
+            data2.tags,
+            { value: price }
+        );
+    });
 });
