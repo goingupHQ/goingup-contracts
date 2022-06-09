@@ -5,6 +5,8 @@
   "dependencies": {
     "@nomiclabs/hardhat-waffle": "^2.0.3",
     "@openzeppelin/contracts": "^4.6.0",
-    "chai": "^4.3.6"
+    "chai": "^4.3.6",
+    "keccak256": "^1.0.6",
+    "merkletreejs": "^0.2.31"
   }
 }
