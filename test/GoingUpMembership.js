@@ -120,10 +120,10 @@ describe('Minting', () => {
         await contractAsPublic1.mint(public1Proof);
 
         const public2Proof = merkle.getProof(public2, whitelist);
-        await contractAsPublic1.mint(public1Proof);
+        await contractAsPublic2.mint(public2Proof);
 
         const public3Proof = merkle.getProof(public3, whitelist);
-        await contractAsPublic1.mint(public1Proof);
+        await contractAsPublic3.mint(public3Proof);
     });
 
     it('Balances of public1, public2 and public3 should all be 1', async () => {
