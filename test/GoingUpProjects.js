@@ -147,9 +147,37 @@ describe('Create a project', () => {
             data2.description,
             data2.started,
             data2.ended,
-            data.primaryUrl,
+            data2.primaryUrl,
             data2.tags,
             { value: price }
         );
     });
+
+    it('Check if projects have been created', async () => {
+        const project1 = await contractAsPublic1.projects(1);
+        const mock1 = mockData[0];
+
+        expect(project1.id).to.equal(1);
+        expect(project1.name).to.equal(mock1.name);
+        expect(project1.description).to.equal(mock1.description);
+        expect(project1.started).to.equal(mock1.started);
+        expect(project1.ended).to.equal(mock1.ended);
+        expect(project1.primaryUrl).to.equal(mock1.primaryUrl);
+        expect(project1.tags).to.equal(mock1.tags);
+        expect(project1.owner).to.equal(projectOwner1);
+        expect(project1.active).to.equal(true);
+        expect(project1.allowMembersToEdit).to.equal(false);
+
+        const project2 = await contractAsPublic1.projects(2);
+        expect(project2.id).to.equal(1);
+        expect(project2.name).to.equal(mock2.name);
+        expect(project2.description).to.equal(mock2.description);
+        expect(project2.started).to.equal(mock2.started);
+        expect(project2.ended).to.equal(mock2.ended);
+        expect(project2.primaryUrl).to.equal(mock2.primaryUrl);
+        expect(project2.tags).to.equal(mock2.tags);
+        expect(project2.owner).to.equal(projectOwner2);
+        expect(project2.active).to.equal(true);
+        expect(project2.allowMembersToEdit).to.equal(false);
+    })
 });
