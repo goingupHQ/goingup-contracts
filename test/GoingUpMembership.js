@@ -2,17 +2,19 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const merkle = require('./../utils/merkle');
 
-var contract,
+let contract,
     contractAsDeployer,
     contractAsOwner,
     contractAsPublic1,
     contractAsPublic2,
     contractAsPublic3,
     contractAsPublic4,
-    contractAsPublic5;
-var deployer, owner, public1, public2, public3, public4, public5;
-var whitelist = [];
-var merkleRoot = null;
+    contractAsPublic5,
+    contractAsPartner1,
+    contractAsPartner2;
+let deployer, owner, public1, public2, public3, public4, public5, partner1, partner2;
+let whitelist = [];
+let merkleRoot = null;
 
 describe('Intialize', () => {
     it('Deploy GoingUpMembership Contract', async () => {
@@ -24,6 +26,8 @@ describe('Intialize', () => {
         public3 = await signers[4].getAddress();
         public4 = await signers[5].getAddress();
         public5 = await signers[6].getAddress();
+        partner1 = await signers[7].getAddress();
+        partner2 = await signers[8].getAddress();
 
         const GoingUpMembership = await ethers.getContractFactory('GoingUpMembership', signers[0]);
         contract = await GoingUpMembership.deploy();
@@ -37,6 +41,8 @@ describe('Intialize', () => {
             contractAsPublic3,
             contractAsPublic4,
             contractAsPublic5,
+            contractAsPartner1,
+            contractAsPartner2
         ] = (await ethers.getSigners()).map((signer) => contract.connect(signer));
     });
 
@@ -120,15 +126,26 @@ describe('Minting', () => {
         expect(await contractAsPublic1.totalSupply()).to.equal(22);
     });
 
-    it('Mint with public1, public2 and public3', async () => {
+    it('Mint with public1, public2 and public3 but not send enough', async () => {
         const public1Proof = merkle.getProof(public1, whitelist);
-        await contractAsPublic1.mint(public1Proof);
+        await expect(contractAsPublic1.mint(public1Proof, { value: '1330000000000000000' })).to.be.revertedWith('did not send enough');
 
         const public2Proof = merkle.getProof(public2, whitelist);
-        await contractAsPublic2.mint(public2Proof);
+        await expect(contractAsPublic2.mint(public2Proof, { value: '2230000000000000000' })).to.be.revertedWith('did not send enough');
 
         const public3Proof = merkle.getProof(public3, whitelist);
-        await contractAsPublic3.mint(public3Proof);
+        await expect(contractAsPublic3.mint(public3Proof, { value: '2330000000000000000' })).to.be.revertedWith('did not send enough');
+    });
+
+    it('Mint with public1, public2 and public3', async () => {
+        const public1Proof = merkle.getProof(public1, whitelist);
+        await contractAsPublic1.mint(public1Proof, { value: '3330000000000000000' });
+
+        const public2Proof = merkle.getProof(public2, whitelist);
+        await contractAsPublic2.mint(public2Proof, { value: '3330000000000000000' });
+
+        const public3Proof = merkle.getProof(public3, whitelist);
+        await contractAsPublic3.mint(public3Proof, { value: '3330000000000000000' });
     });
 
     it('Balances of public1, public2 and public3 should all be 1', async () => {
@@ -166,7 +183,7 @@ describe('Minting', () => {
     });
 });
 
-describe.skip('Token URI', () => {
+describe('Token URI', () => {
     it('Check all token URIs (should all be blank)', async () => {
         for (let i = 0; i < 222; i++) {
             expect(await contractAsPublic1.tokenURI(i + 1)).to.equal('');
@@ -187,3 +204,74 @@ describe.skip('Token URI', () => {
         }
     })
 });
+
+describe('Partners', () => {
+    it('Check partner variables', async () => {
+        const _partner1 = await contractAsPublic1.partner1();
+        const _partner1Percentage = await contractAsPublic1.partner1Percentage();
+        const _partner2 = await contractAsPublic2.partner1();
+        const _partner2Percentage = await contractAsPublic2.partner1Percentage();
+
+        expect(_partner1).to.equal('0x0000000000000000000000000000000000000000');
+        expect(_partner1Percentage).to.equal(0);
+        expect(_partner2).to.equal('0x0000000000000000000000000000000000000000');
+        expect(_partner2Percentage).to.equal(0);
+    });
+
+    it('Set partner1 with non owner address', async () => {
+        await expect(contractAsPublic1.setPartner1('0x0000000000000000000000000000000000000000', 0)).to.be.revertedWith('not the owner');
+    });
+
+    it('Set partner2 with non owner address', async () => {
+        await expect(contractAsPublic2.setPartner1('0x0000000000000000000000000000000000000000', 0)).to.be.revertedWith('not the owner');
+    });
+
+    it('Set partner1 with owner address', async () => {
+        await contractAsOwner.setPartner1(partner1, 3);
+        const _partner1 = await contractAsPublic1.partner1();
+        const _partner1Percentage = await contractAsPublic1.partner1Percentage();
+        expect(_partner1).to.equal(partner1);
+        expect(_partner1Percentage).to.equal(3);
+    });
+
+    it('Set partner2 with owner address', async () => {
+        await contractAsOwner.setPartner2(partner2, 5);
+        const _partner2 = await contractAsPublic1.partner2();
+        const _partner2Percentage = await contractAsPublic1.partner2Percentage();
+        expect(_partner2).to.equal(partner2);
+        expect(_partner2Percentage).to.equal(5);
+    });
+});
+
+describe('Balances and withdrawal', async () => {
+    let contractStartingBalance, partner1StartingBalance, partner2StartingBalance, ownerStartingBalance;
+    let contractEndingBalance, partner1EndingBalance, partner2EndingBalance, ownerEndingBalance;
+    it('Check starting balances', async () => {
+        contractStartingBalance = await contract.provider.getBalance(contract.address);
+        partner1StartingBalance = await contract.provider.getBalance(partner1);
+        partner2StartingBalance = await contract.provider.getBalance(partner2);
+        ownerStartingBalance = await contract.provider.getBalance(owner);
+
+        expect(contractStartingBalance).to.equal('9990000000000000000');
+    });
+
+    it('Withdraw funds by non owner address', async () => {
+        await expect(contractAsPublic1.withdraw()).to.be.revertedWith('not the owner');
+    });
+
+    it('Withdraw funds by owner address', async () => {
+        await contractAsOwner.withdraw();
+    });
+
+    it('Check ending balances', async () => {
+        contractEndingBalance = await contract.provider.getBalance(contract.address);
+        partner1EndingBalance = await contract.provider.getBalance(partner1);
+        partner2EndingBalance = await contract.provider.getBalance(partner2);
+        ownerEndingBalance = await contract.provider.getBalance(owner);
+
+        expect(contractEndingBalance).to.equal('0');
+        expect(contractStartingBalance.sub(contractEndingBalance)).to.equal('9990000000000000000');
+        expect(partner1EndingBalance.sub(partner1StartingBalance)).to.equal('299700000000000000');
+        expect(partner2EndingBalance.sub(partner2StartingBalance)).to.equal('484515000000000000');
+    });
+})
