@@ -63,6 +63,10 @@ describe('Intialize', () => {
     it('Set whitelist root as deployer', async () => {
         await contractAsDeployer.setWhitelistRoot(merkleRoot);
     })
+
+    it('Get Token URI of nonexistent token', async () => {
+        await expect(contractAsPublic1.tokenURI(45)).to.be.revertedWith('token does not exist');
+    });
 });
 
 describe('Contract ownership', () => {
@@ -142,7 +146,44 @@ describe('Minting', () => {
         await expect(contractAsPublic1.mint(public1Proof)).to.be.revertedWith('already minted');
     });
 
-    it.skip('Mint exceeds max supply', async () => {
-        await expect(contractAsPublic1.mint()).to.be.revertedWith('max supply minted');
+    it('Manual mint with non-owner address', async () => {
+        await expect(contractAsPublic1.manualMint(public1, 10)).to.be.revertedWith('not the owner');
     });
+
+    it('Manual mint with owner address but exceeds supply', async () => {
+        await expect(contractAsOwner.manualMint(owner, 222)).to.be.revertedWith('exceeds max supply');
+    });
+
+    it('Manual mint 217 tokens with owner address', async () => {
+        await contractAsOwner.manualMint(owner, 197);
+        expect(await contractAsPublic1.totalSupply()).to.equal(222);
+        expect(await contractAsPublic1.balanceOf(owner)).to.equal(197);
+    });
+
+    it('Mint exceeds max supply', async () => {
+        const public1Proof = merkle.getProof(public1, whitelist);
+        await expect(contractAsPublic1.mint(public1Proof)).to.be.revertedWith('max supply minted');
+    });
+});
+
+describe.skip('Token URI', () => {
+    it('Check all token URIs (should all be blank)', async () => {
+        for (let i = 0; i < 222; i++) {
+            expect(await contractAsPublic1.tokenURI(i + 1)).to.equal('');
+        }
+    })
+
+    it('Set base token URI by non owner address', async () => {
+        await expect(contractAsDeployer.setBaseURI('ipfs://whatever/')).to.be.revertedWith('not the owner');
+    });
+
+    it('Set base token URI by owner address', async () => {
+        await contractAsOwner.setBaseURI('ipfs://whatever/');
+    });
+
+    it('Check all token URIs', async () => {
+        for (let i = 0; i < 222; i++) {
+            expect(await contractAsPublic1.tokenURI(i + 1)).to.equal(`ipfs://whatever/${i + 1}.json`);
+        }
+    })
 });
