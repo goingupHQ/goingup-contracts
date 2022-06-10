@@ -59,7 +59,6 @@ describe('Intialize', () => {
         whitelist.push(public2);
         whitelist.push(public3);
         merkleRoot = merkle.computeRoot(whitelist);
-        console.log(`Computed Merkle Root:`, merkleRoot.toString('hex'));
     });
 
     it('Set whitelist root as public1 (reverts)', async () => {
