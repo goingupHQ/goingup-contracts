@@ -49,7 +49,9 @@ describe('Intialize', () => {
     });
 
     it('Compute whitelist merkle root', async () => {
-        whitelist.push([public1, public2, public3]);
+        whitelist.push(public1);
+        whitelist.push(public2);
+        whitelist.push(public3);
         merkleRoot = merkle.computeRoot(whitelist);
         console.log(`Computed Merkle Root:`, merkleRoot.toString('hex'));
     });
@@ -116,7 +118,6 @@ describe('Minting', () => {
 
     it('Mint with public1, public2 and public3', async () => {
         const public1Proof = merkle.getProof(public1, whitelist);
-        console.log(whitelist, public1Proof)
         await contractAsPublic1.mint(public1Proof);
 
         const public2Proof = merkle.getProof(public2, whitelist);
@@ -134,6 +135,11 @@ describe('Minting', () => {
 
     it('Total supply should now be 25', async () => {
         expect(await contractAsPublic1.totalSupply()).to.equal(25);
+    });
+
+    it('Mint with public1, public2 and public3 (should revert)', async () => {
+        const public1Proof = merkle.getProof(public1, whitelist);
+        await expect(contractAsPublic1.mint(public1Proof)).to.be.revertedWith('already minted');
     });
 
     it.skip('Mint exceeds max supply', async () => {
