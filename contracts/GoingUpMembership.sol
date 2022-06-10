@@ -54,6 +54,13 @@ contract GoingUpMembership is ERC721, ERC721Enumerable, Ownable, ReentrancyGuard
         _safeMint(msg.sender, totalSupply() + 1);
     }
 
+    function manualMint(address to, uint256 qty) public onlyOwner {
+        require(totalSupply() + qty <= maxSupply, "exceeds max supply");
+        for (uint i = 0; i < qty; i++) {
+            _safeMint(to, totalSupply() + 1);
+        }
+    }
+
     function withdraw() external onlyOwner nonReentrant {
         payable(msg.sender).transfer(address(this).balance);
     }
