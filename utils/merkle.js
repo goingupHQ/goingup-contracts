@@ -12,6 +12,7 @@ const getProof = (address, addressList) => {
     const leafNodes = addressList.map(addr => keccak256(addr));
     const merkleTree = new MerkleTree(leafNodes, keccak256, { sortPairs: true });
     const proof = merkleTree.getHexProof(keccak256(address));
+    console.log(address, addressList, leafNodes, merkleTree, proof);
     return proof;
 }
 
