@@ -48,9 +48,9 @@ contract GoingUpMembership is ERC721, ERC721Enumerable, Ownable, ReentrancyGuard
     }
 
     function mint(bytes32[] memory proof) public payable {
-        require(verifyWhitelist(proof), "not whitelisted");
-        require(balanceOf(msg.sender) == 0, "already minted");
         require(totalSupply() < maxSupply, "max supply minted");
+        require(balanceOf(msg.sender) == 0, "already minted");
+        require(verifyWhitelist(proof), "not whitelisted");
         _safeMint(msg.sender, totalSupply() + 1);
     }
 
@@ -103,7 +103,7 @@ contract GoingUpMembership is ERC721, ERC721Enumerable, Ownable, ReentrancyGuard
 
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory)
     {
-        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
+        require(_exists(tokenId), "token does not exist");
 
         string memory _tokenURI = super.tokenURI(tokenId);
         return bytes(_tokenURI).length > 0 ? string(abi.encodePacked(_tokenURI, ".json")) : "";
