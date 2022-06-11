@@ -9,8 +9,27 @@ let contract,
     contractAsAdmin2,
     contractAsPublic1,
     contractAsProjectOwner1,
-    contractAsProjectOwner2;
-let deployer, owner, admin1, admin2, public1, projectOwner1, projectOwner2;
+    contractAsProjectOwner2,
+    contractAsProject1Member1,
+    contractAsProject1Member2,
+    contractAsProject1Member3,
+    contractAsProject2Member1,
+    contractAsProject2Member2,
+    contractAsProject2Member3;
+
+let deployer,
+    owner,
+    admin1,
+    admin2,
+    public1,
+    projectOwner1,
+    projectOwner2,
+    project1Member1,
+    project1Member2,
+    project1Member3,
+    project2Member1,
+    project2Member2,
+    project2Member3;
 
 describe('Intialize', () => {
     it('Deploy GoingUpProjects Contract', async () => {
@@ -22,6 +41,12 @@ describe('Intialize', () => {
         public1 = await signers[4].getAddress();
         projectOwner1 = await signers[5].getAddress();
         projectOwner2 = await signers[6].getAddress();
+        project1Member1 = await signers[7].getAddress();
+        project1Member2 = await signers[8].getAddress();
+        project1Member3 = await signers[9].getAddress();
+        project2Member1 = await signers[10].getAddress();
+        project2Member2 = await signers[11].getAddress();
+        project2Member3 = await signers[12].getAddress();
 
         const GoingUpProjects = await ethers.getContractFactory('GoingUpProjects', signers[0]);
         contract = await GoingUpProjects.deploy();
@@ -35,6 +60,12 @@ describe('Intialize', () => {
             contractAsPublic1,
             contractAsProjectOwner1,
             contractAsProjectOwner2,
+            contractAsProject1Member1,
+            contractAsProject1Member2,
+            contractAsProject1Member3,
+            contractAsProject2Member1,
+            contractAsProject2Member2,
+            contractAsProject2Member3,
         ] = (await ethers.getSigners()).map((signer) => contract.connect(signer));
     });
 });
@@ -101,7 +132,7 @@ describe('Contract variable "price"', () => {
 });
 
 describe('Create and update projects', () => {
-    it ('Create project without sending payment', async () => {
+    it('Create project without sending payment', async () => {
         const data = mockData[0];
         await expect(
             contractAsProjectOwner1.create(
@@ -115,7 +146,7 @@ describe('Create and update projects', () => {
         ).to.revertedWith('did not send enough');
     });
 
-    it ('Create project but not send enough payment', async () => {
+    it('Create project but not send enough payment', async () => {
         const data = mockData[0];
         await expect(
             contractAsProjectOwner1.create(
@@ -187,28 +218,32 @@ describe('Create and update projects', () => {
     it('Update a project that address is not the owner of', async () => {
         const price = await contractAsProjectOwner1.price();
         const data1 = mockData[10];
-        await expect(contractAsProjectOwner2.update(
-            1,
-            data1.name,
-            data1.description,
-            data1.started,
-            data1.ended,
-            data1.primaryUrl,
-            data1.tags.join(),
-            { value: price }
-        )).to.be.revertedWith('cannot edit project');
+        await expect(
+            contractAsProjectOwner2.update(
+                1,
+                data1.name,
+                data1.description,
+                data1.started,
+                data1.ended,
+                data1.primaryUrl,
+                data1.tags.join(),
+                { value: price }
+            )
+        ).to.be.revertedWith('cannot edit project');
 
         const data2 = mockData[20];
-        await expect(contractAsProjectOwner1.update(
-            2,
-            data2.name,
-            data2.description,
-            data2.started,
-            data2.ended,
-            data2.primaryUrl,
-            data2.tags.join(),
-            { value: price }
-        )).to.be.revertedWith('cannot edit project');
+        await expect(
+            contractAsProjectOwner1.update(
+                2,
+                data2.name,
+                data2.description,
+                data2.started,
+                data2.ended,
+                data2.primaryUrl,
+                data2.tags.join(),
+                { value: price }
+            )
+        ).to.be.revertedWith('cannot edit project');
     });
 
     it('Project Owners update their respective projects', async () => {
@@ -261,3 +296,57 @@ describe('Create and update projects', () => {
         expect(project2.tags).to.equal(mock2.tags.join());
     });
 });
+
+describe('Project ownership', () => {
+    it('Transfer project ownership but not enough funds sent', async () => {
+        const price = await contractAsProjectOwner1.price();
+        await expect(contractAsPublic1.transferProjectOwnership(1, public1, { value: price.sub('100000') }))
+            .to.be.revertedWith('did not send enough');
+
+        await expect(contractAsPublic1.transferProjectOwnership(2, public1, { value: price.sub('100000') }))
+            .to.be.revertedWith('did not send enough');
+    });
+
+    it('Transfer project ownership but not authorized', async () => {
+        const price = await contractAsProjectOwner1.price();
+        await expect(contractAsPublic1.transferProjectOwnership(1, public1, { value: price }))
+            .to.be.revertedWith('not the project owner');
+
+        await expect(contractAsPublic1.transferProjectOwnership(2, public1, { value: price }))
+            .to.be.revertedWith('not the project owner');
+    });
+
+    it('Transfer project ownership by respective owners', async () => {
+        const price = await contractAsProjectOwner1.price();
+        await contractAsProjectOwner1.transferProjectOwnership(1, public1, { value: price });
+        await contractAsProjectOwner2.transferProjectOwnership(2, public1, { value: price });
+    });
+
+    it('Verify if project owner has changed', async () => {
+        const project1 = await contractAsPublic1.projects(1);
+        expect(project1.owner).to.equal(public1);
+
+        const project2 = await contractAsPublic1.projects(2);
+        expect(project2.owner).to.equal(public1);
+    })
+
+    it('Transfer project ownership to original owners', async () => {
+        const price = await contractAsProjectOwner1.price();
+        await contractAsPublic1.transferProjectOwnership(1, projectOwner1, { value: price });
+        await contractAsPublic1.transferProjectOwnership(2, projectOwner2, { value: price });
+    });
+
+    it('Verify if project ownership has been returned to original owners', async () => {
+        const project1 = await contractAsPublic1.projects(1);
+        expect(project1.owner).to.equal(projectOwner1);
+
+        const project2 = await contractAsPublic1.projects(2);
+        expect(project2.owner).to.equal(projectOwner2);
+    })
+});
+
+// describe('Project members', () => {
+//     it('Invite members to project but not authorized', async () => {
+
+//     });
+// });

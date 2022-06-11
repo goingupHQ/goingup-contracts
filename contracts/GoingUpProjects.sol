@@ -79,9 +79,20 @@ contract GoingUpProjects {
     mapping(uint256 => string[]) public reviews;
     /// @notice Project extra data array
     mapping(uint256 => string[]) public extraData;
+
+    modifier onlyProjectOwner(uint256 projectId) {
+        require(msg.sender == projects[projectId].owner, "not the project owner");
+        _;
+    }
+
     modifier canEditProject(uint256 projectId) {
         Project memory project = projects[projectId];
         require(msg.sender == project.owner || (project.allowMembersToEdit && membersMapping[projectId][msg.sender]), "cannot edit project");
+        _;
+    }
+
+    modifier isProjectActive(uint256 projectId) {
+        require(projects[projectId].active, "project not active");
         _;
     }
 
@@ -139,6 +150,44 @@ contract GoingUpProjects {
         projects[id].tags = tags;
 
         emit Update(msg.sender, id);
+    }
+
+    /// @notice This event is emitted when project ownership is transferred
+    /// @param projectId Project ID
+    /// @param from Current project owner
+    /// @param to New project owner
+    event TransferProjectOwnership(uint256 indexed projectId, address from, address to);
+
+    /// @notice Transfer project ownership
+    /// @param projectId Project ID
+    /// @param to Address to set as new owner of project
+    function transferProjectOwnership(uint256 projectId, address to) public payable sentEnough onlyProjectOwner(projectId) {
+        projects[projectId].owner = to;
+        emit TransferProjectOwnership(projectId, msg.sender, to);
+    }
+
+    /// @notice This event is emitted when project is deactivated
+    /// @param projectId Project ID
+    /// @param deactivatedBy Address that activated the project
+    event Deactivate(uint indexed projectId, address deactivatedBy);
+
+    /// @notice Activate project and allow updates (only accessible to project owner)
+    /// @param projectId Project ID
+    function deactivate(uint projectId) public onlyProjectOwner(projectId) {
+        projects[projectId].active = false;
+        emit Deactivate(projectId, msg.sender);
+    }
+
+    /// @notice This event is emitted when project is activated
+    /// @param projectId Project ID
+    /// @param activatedBy Address that activated the project
+    event Activate(uint indexed projectId, address activatedBy);
+
+    /// @notice Activate project and allow updates (only accessible to project owner)
+    /// @param projectId Project ID
+    function activate(uint projectId) public onlyProjectOwner(projectId) {
+        projects[projectId].active = true;
+        emit Activate(projectId, msg.sender);
     }
 
     /// @notice This event is emitted when an authorized address invites an address to be a project member
