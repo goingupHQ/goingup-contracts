@@ -16,7 +16,7 @@ let deployer, owner, public1, public2, public3, public4, public5, partner1, part
 let whitelist = [];
 let merkleRoot = null;
 
-describe('Intialize', () => {
+describe('Initialize', () => {
     it('Deploy GoingUpMembership Contract', async () => {
         const signers = await ethers.getSigners();
         deployer = await signers[0].getAddress();
