@@ -345,6 +345,88 @@ describe('Project ownership', () => {
     })
 });
 
+describe('Project active/not active state', () => {
+    it('Deactivate projects but not authorized', async () => {
+        await expect(contractAsPublic1.deactivate(1))
+            .to.be.revertedWith('not the project owner');
+
+        await expect(contractAsPublic1.deactivate(2))
+            .to.be.revertedWith('not the project owner');
+    });
+
+    it('Deactivate projects by owners', async () => {
+        await contractAsProjectOwner1.deactivate(1);
+        await contractAsProjectOwner2.deactivate(2);
+    });
+
+    it('Update deactivated projects', async () => {
+        const price = await contractAsProjectOwner1.price();
+        const data1 = mockData[11];
+        await expect(contractAsProjectOwner1.update(
+            1,
+            data1.name,
+            data1.description,
+            data1.started,
+            data1.ended,
+            data1.primaryUrl,
+            data1.tags.join(),
+            { value: price }
+        )).to.be.revertedWith('project not active');
+
+        const data2 = mockData[21];
+        await expect(contractAsProjectOwner2.update(
+            2,
+            data2.name,
+            data2.description,
+            data2.started,
+            data2.ended,
+            data2.primaryUrl,
+            data2.tags.join(),
+            { value: price }
+        )).to.be.revertedWith('project not active');
+    });
+
+    it('Activate projects but not authorized', async () => {
+        await expect(contractAsPublic1.activate(1))
+            .to.be.revertedWith('not the project owner');
+
+        await expect(contractAsPublic1.activate(2))
+            .to.be.revertedWith('not the project owner');
+    });
+
+    it('Activate projects by owners', async () => {
+        await contractAsProjectOwner1.activate(1);
+        await contractAsProjectOwner2.activate(2);
+    });
+
+    it('Update activated projects', async () => {
+        const price = await contractAsProjectOwner1.price();
+        const data1 = mockData[11];
+        await contractAsProjectOwner1.update(
+            1,
+            data1.name,
+            data1.description,
+            data1.started,
+            data1.ended,
+            data1.primaryUrl,
+            data1.tags.join(),
+            { value: price }
+        );
+
+        const data2 = mockData[21];
+        await contractAsProjectOwner2.update(
+            2,
+            data2.name,
+            data2.description,
+            data2.started,
+            data2.ended,
+            data2.primaryUrl,
+            data2.tags.join(),
+            { value: price }
+        );
+    });
+});
+
 // describe('Project members', () => {
 //     it('Invite members to project but not authorized', async () => {
 
