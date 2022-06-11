@@ -15,6 +15,7 @@ contract GoingUpProjects {
         uint started;
         uint ended;
         string primaryUrl;
+        string tags;
         address owner;
         bool active;
         bool allowMembersToEdit;
@@ -68,12 +69,10 @@ contract GoingUpProjects {
 
     /// @notice Projects mapping
     mapping(uint256 => Project) public projects;
-    /// @notice Project tags array
-    mapping(uint256 => string[]) public tags;
     /// @notice Project members array
-    mapping(uint256 => address[]) public members;
+    mapping(uint256 => mapping(address => bool)) public membersMapping;
     /// @notice Project invites array
-    mapping(uint256 => address[]) public invites;
+    mapping(uint256 => mapping(address => bool)) public invitesMapping;
     /// @notice Project scores array
     mapping(uint256 => uint[]) public scores;
     /// @notice Project reviews array
@@ -82,29 +81,8 @@ contract GoingUpProjects {
     mapping(uint256 => string[]) public extraData;
     modifier canEditProject(uint256 projectId) {
         Project memory project = projects[projectId];
-
-        if (msg.sender == project.owner) {
-            _;
-        } else {
-            if (!project.allowMembersToEdit) {
-                revert("cannot edit project");
-            } else {
-                bool isMember = false;
-                for (uint i = 0; i < members[projectId].length; i++) {
-                    address member = members[projectId][i];
-                    if (msg.sender == member) {
-                        isMember = true;
-                        break;
-                    }
-                }
-
-                if (!isMember) {
-                    revert("cannot edit project");
-                }
-
-                _;
-            }
-        }
+        require(msg.sender == project.owner || (project.allowMembersToEdit && membersMapping[projectId][msg.sender]), "cannot edit project");
+        _;
     }
     /// @notice Create a project
     /// @param name Project name
@@ -112,8 +90,8 @@ contract GoingUpProjects {
     /// @param started Project start (Unix timestamp, set to zero if you do not want to set any value)
     /// @param ended Project ended (Unix timestamp, set to zero if you do not want to set any value)
     /// @param primaryUrl Project primary url
-    /// @param _tags Project tags
-    function create(string memory name, string memory description, uint started, uint ended, string memory primaryUrl, string[] memory _tags) public payable sentEnough {
+    /// @param tags Project tags
+    function create(string memory name, string memory description, uint started, uint ended, string memory primaryUrl, string memory tags) public payable sentEnough {
         Project memory newProject;
 
         newProject.id = idCounter;
@@ -122,12 +100,12 @@ contract GoingUpProjects {
         newProject.started = started;
         newProject.ended = ended;
         newProject.primaryUrl = primaryUrl;
+        newProject.tags = tags;
         newProject.owner = msg.sender;
         newProject.active = true;
         newProject.allowMembersToEdit = false;
 
         projects[idCounter] = newProject;
-        tags[idCounter] = _tags;
         idCounter++;
     }
     /// @notice Update a project
@@ -137,22 +115,20 @@ contract GoingUpProjects {
     /// @param started Project start (Unix timestamp, set to zero if you do not want to set any value)
     /// @param ended Project ended (Unix timestamp, set to zero if you do not want to set any value)
     /// @param primaryUrl Project primary url
-    /// @param _tags Project tags
-    function update(uint256 id, string memory name, string memory description, uint started, uint ended, string memory primaryUrl, string[] memory _tags) public payable sentEnough canEditProject(id) {
+    /// @param tags Project tags
+    function update(uint256 id, string memory name, string memory description, uint started, uint ended, string memory primaryUrl, string memory tags) public payable sentEnough canEditProject(id) {
         projects[id].name = name;
         projects[id].description = description;
         projects[id].started = started;
         projects[id].ended = ended;
         projects[id].primaryUrl = primaryUrl;
-        projects[id].active = true;
-
-        tags[id] = _tags;
+        projects[id].tags = tags;
     }
-    /// @notice Invite a collaborator to project
-    /// @param collaborator Collaborator's address
-    function inviteCollaborator(uint256 id, address collaborator) public canEditProject(id) {
-        invites[id].push(collaborator);
-    }
+    // /// @notice Invite a collaborator to project
+    // /// @param collaborator Collaborator's address
+    // function inviteCollaborator(uint256 id, address collaborator) public canEditProject(id) {
+    //     invites[id].push(collaborator);
+    // }
 
     /// @notice Withdraw native tokens (matic)
     function withdrawFunds() public onlyAdmin {
