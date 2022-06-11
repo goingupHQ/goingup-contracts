@@ -190,6 +190,30 @@ contract GoingUpProjects {
         emit Activate(projectId, msg.sender);
     }
 
+    /// @notice This event is emitted when project owner allows members to edit project
+    /// @param projectId Project ID
+    /// @param allowedBy Current owner address allowing edits by members
+    event AllowMembersToEdit(uint256 indexed projectId, address allowedBy);
+
+    /// @notice Allows members to edit updateable portions of project (only accessible to project owner)
+    /// @param projectId Project ID
+    function allowMembersToEdit(uint256 projectId) public onlyProjectOwner(projectId) {
+        projects[projectId].allowMembersToEdit = true;
+        emit AllowMembersToEdit(projectId, msg.sender);
+    }
+
+    /// @notice This event is emitted when project owner disallows members to edit project
+    /// @param projectId Project ID
+    /// @param allowedBy Current owner address allowing edits by members
+    event DisallowMembersToEdit(uint256 indexed projectId, address allowedBy);
+
+    /// @notice Allows members to edit updateable portions of project (only accessible to project owner)
+    /// @param projectId Project ID
+    function disallowMembersToEdit(uint256 projectId) public onlyProjectOwner(projectId) {
+        projects[projectId].allowMembersToEdit = false;
+        emit AllowMembersToEdit(projectId, msg.sender);
+    }
+
     /// @notice This event is emitted when an authorized address invites an address to be a project member
     /// @param projectId Project ID
     /// @param from Authorized address issuing the invitation
