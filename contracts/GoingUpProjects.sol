@@ -84,6 +84,12 @@ contract GoingUpProjects {
         require(msg.sender == project.owner || (project.allowMembersToEdit && membersMapping[projectId][msg.sender]), "cannot edit project");
         _;
     }
+
+    /// @notice This event is emitted when a project is created
+    /// @param creator Project creator
+    /// @param projectId Generated id of the created project
+    event Create(address indexed creator, uint256 projectId);
+
     /// @notice Create a project
     /// @param name Project name
     /// @param description Project description
@@ -107,7 +113,15 @@ contract GoingUpProjects {
 
         projects[idCounter] = newProject;
         idCounter++;
+
+        emit Create(msg.sender, newProject.id);
     }
+
+    /// @notice This event is emitted when a project is updated
+    /// @param updater Project creator
+    /// @param projectId Generated id of the updated project
+    event Update(address indexed updater, uint256 projectId);
+
     /// @notice Update a project
     /// @param id Project ID
     /// @param name Project name
@@ -123,12 +137,22 @@ contract GoingUpProjects {
         projects[id].ended = ended;
         projects[id].primaryUrl = primaryUrl;
         projects[id].tags = tags;
+
+        emit Update(msg.sender, id);
     }
-    // /// @notice Invite a collaborator to project
-    // /// @param collaborator Collaborator's address
-    // function inviteCollaborator(uint256 id, address collaborator) public canEditProject(id) {
-    //     invites[id].push(collaborator);
-    // }
+
+    /// @notice This event is emitted when an authorized address invites an address to be a project member
+    /// @param projectId Project ID
+    /// @param from Authorized address issuing the invitation
+    /// @param to Address invited to become a member of the project
+    event InviteMember(uint256 indexed projectId, address from, address to);
+
+    /// @notice Invite a collaborator to project
+    /// @param member Address to invite to become a member of the project
+    function inviteMember(uint256 id, address member) public canEditProject(id) {
+        invitesMapping[id][member] = true;
+        emit InviteMember(id, msg.sender, member);
+    }
 
     /// @notice Withdraw native tokens (matic)
     function withdrawFunds() public onlyAdmin {
