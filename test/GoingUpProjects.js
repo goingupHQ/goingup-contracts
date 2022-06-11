@@ -20,6 +20,8 @@ describe('Intialize', () => {
         admin1 = await signers[2].getAddress();
         admin2 = await signers[3].getAddress();
         public1 = await signers[4].getAddress();
+        projectOwner1 = await signers[5].getAddress();
+        projectOwner2 = await signers[6].getAddress();
 
         const GoingUpProjects = await ethers.getContractFactory('GoingUpProjects', signers[0]);
         contract = await GoingUpProjects.deploy();
@@ -98,7 +100,7 @@ describe('Contract variable "price"', () => {
     });
 });
 
-describe('Create a project', () => {
+describe('Create and update projects', () => {
     it ('Create project without sending payment', async () => {
         const data = mockData[0];
         await expect(
@@ -108,7 +110,7 @@ describe('Create a project', () => {
                 data.started,
                 data.ended,
                 data.primaryUrl,
-                data.tags
+                data.tags.join()
             )
         ).to.revertedWith('did not send enough');
     });
@@ -122,7 +124,7 @@ describe('Create a project', () => {
                 data.started,
                 data.ended,
                 data.primaryUrl,
-                data.tags,
+                data.tags.join(),
                 { value: '1000000000000000' }
             )
         ).to.revertedWith('did not send enough');
@@ -137,7 +139,7 @@ describe('Create a project', () => {
             data.started,
             data.ended,
             data.primaryUrl,
-            data.tags,
+            data.tags.join(),
             { value: price }
         );
 
@@ -148,7 +150,7 @@ describe('Create a project', () => {
             data2.started,
             data2.ended,
             data2.primaryUrl,
-            data2.tags,
+            data2.tags.join(),
             { value: price }
         );
     });
@@ -163,21 +165,99 @@ describe('Create a project', () => {
         expect(project1.started).to.equal(mock1.started);
         expect(project1.ended).to.equal(mock1.ended);
         expect(project1.primaryUrl).to.equal(mock1.primaryUrl);
-        expect(project1.tags).to.equal(mock1.tags);
         expect(project1.owner).to.equal(projectOwner1);
         expect(project1.active).to.equal(true);
         expect(project1.allowMembersToEdit).to.equal(false);
+        expect(project1.tags).to.equal(mock1.tags.join());
 
         const project2 = await contractAsPublic1.projects(2);
-        expect(project2.id).to.equal(1);
+        const mock2 = mockData[1];
+        expect(project2.id).to.equal(2);
         expect(project2.name).to.equal(mock2.name);
         expect(project2.description).to.equal(mock2.description);
         expect(project2.started).to.equal(mock2.started);
         expect(project2.ended).to.equal(mock2.ended);
         expect(project2.primaryUrl).to.equal(mock2.primaryUrl);
-        expect(project2.tags).to.equal(mock2.tags);
         expect(project2.owner).to.equal(projectOwner2);
         expect(project2.active).to.equal(true);
         expect(project2.allowMembersToEdit).to.equal(false);
-    })
+        expect(project2.tags).to.equal(mock2.tags.join());
+    });
+
+    it('Update a project that address is not the owner of', async () => {
+        const price = await contractAsProjectOwner1.price();
+        const data1 = mockData[10];
+        await expect(contractAsProjectOwner2.update(
+            1,
+            data1.name,
+            data1.description,
+            data1.started,
+            data1.ended,
+            data1.primaryUrl,
+            data1.tags.join(),
+            { value: price }
+        )).to.be.revertedWith('cannot edit project');
+
+        const data2 = mockData[20];
+        await expect(contractAsProjectOwner1.update(
+            2,
+            data2.name,
+            data2.description,
+            data2.started,
+            data2.ended,
+            data2.primaryUrl,
+            data2.tags.join(),
+            { value: price }
+        )).to.be.revertedWith('cannot edit project');
+    });
+
+    it('Project Owners update their respective projects', async () => {
+        const price = await contractAsProjectOwner1.price();
+        const data1 = mockData[10];
+        await contractAsProjectOwner1.update(
+            1,
+            data1.name,
+            data1.description,
+            data1.started,
+            data1.ended,
+            data1.primaryUrl,
+            data1.tags.join(),
+            { value: price }
+        );
+
+        const data2 = mockData[20];
+        await contractAsProjectOwner2.update(
+            2,
+            data2.name,
+            data2.description,
+            data2.started,
+            data2.ended,
+            data2.primaryUrl,
+            data2.tags.join(),
+            { value: price }
+        );
+    });
+
+    it('Check if projects have been updated', async () => {
+        const project1 = await contractAsPublic1.projects(1);
+        const mock1 = mockData[10];
+
+        expect(project1.id).to.equal(1);
+        expect(project1.name).to.equal(mock1.name);
+        expect(project1.description).to.equal(mock1.description);
+        expect(project1.started).to.equal(mock1.started);
+        expect(project1.ended).to.equal(mock1.ended);
+        expect(project1.primaryUrl).to.equal(mock1.primaryUrl);
+        expect(project1.tags).to.equal(mock1.tags.join());
+
+        const project2 = await contractAsPublic1.projects(2);
+        const mock2 = mockData[20];
+        expect(project2.id).to.equal(2);
+        expect(project2.name).to.equal(mock2.name);
+        expect(project2.description).to.equal(mock2.description);
+        expect(project2.started).to.equal(mock2.started);
+        expect(project2.ended).to.equal(mock2.ended);
+        expect(project2.primaryUrl).to.equal(mock2.primaryUrl);
+        expect(project2.tags).to.equal(mock2.tags.join());
+    });
 });
