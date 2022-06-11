@@ -134,22 +134,22 @@ contract GoingUpProjects {
     event Update(address indexed updater, uint256 projectId);
 
     /// @notice Update a project
-    /// @param id Project ID
+    /// @param projectId Project ID
     /// @param name Project name
     /// @param description Project description
     /// @param started Project start (Unix timestamp, set to zero if you do not want to set any value)
     /// @param ended Project ended (Unix timestamp, set to zero if you do not want to set any value)
     /// @param primaryUrl Project primary url
     /// @param tags Project tags
-    function update(uint256 id, string memory name, string memory description, uint started, uint ended, string memory primaryUrl, string memory tags) public payable sentEnough canEditProject(id) {
-        projects[id].name = name;
-        projects[id].description = description;
-        projects[id].started = started;
-        projects[id].ended = ended;
-        projects[id].primaryUrl = primaryUrl;
-        projects[id].tags = tags;
+    function update(uint256 projectId, string memory name, string memory description, uint started, uint ended, string memory primaryUrl, string memory tags) public payable sentEnough canEditProject(projectId) isProjectActive(projectId) {
+        projects[projectId].name = name;
+        projects[projectId].description = description;
+        projects[projectId].started = started;
+        projects[projectId].ended = ended;
+        projects[projectId].primaryUrl = primaryUrl;
+        projects[projectId].tags = tags;
 
-        emit Update(msg.sender, id);
+        emit Update(msg.sender, projectId);
     }
 
     /// @notice This event is emitted when project ownership is transferred
