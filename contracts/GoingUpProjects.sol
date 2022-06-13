@@ -220,11 +220,24 @@ contract GoingUpProjects {
     /// @param to Address invited to become a member of the project
     event InviteMember(uint256 indexed projectId, address from, address to);
 
-    /// @notice Invite a collaborator to project
+    /// @notice Invite a member to project
     /// @param member Address to invite to become a member of the project
     function inviteMember(uint256 id, address member) public canEditProject(id) {
         invitesMapping[id][member] = true;
         emit InviteMember(id, msg.sender, member);
+    }
+
+    /// @notice This event is emitted when an authorized address disinvites a pending invite
+    /// @param projectId Project ID
+    /// @param from Authorized address issuing the invitation
+    /// @param to Address to disinvite
+    event DisinviteMember(uint256 indexed projectId, address from, address to);
+
+    /// @notice Disinvite member from project
+    /// @param member Address to disinvite from project
+    function disinviteMember(uint256 id, address member) public canEditProject(id) {
+        invitesMapping[id][member] = false;
+        emit DisinviteMember(id, msg.sender, member);
     }
 
     /// @notice Withdraw native tokens (matic)

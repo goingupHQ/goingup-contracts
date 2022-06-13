@@ -467,8 +467,70 @@ describe('Project allow/disallow project members to edit', () => {
     });
 });
 
-// describe('Project members', () => {
-//     it('Invite members to project but not authorized', async () => {
+describe('Project members', () => {
+    it('Invite members to project but not authorized', async () => {
+        await expect(contractAsPublic1.inviteMember(1, public1))
+            .to.be.revertedWith('cannot edit project');
 
-//     });
-// });
+        await expect(contractAsPublic1.inviteMember(2, public1))
+            .to.be.revertedWith('cannot edit project');
+    });
+
+    it('Invite members to project by owners', async () => {
+        await contractAsProjectOwner1.inviteMember(1, project1Member1);
+        await contractAsProjectOwner1.inviteMember(1, project1Member2);
+        await contractAsProjectOwner1.inviteMember(1, project1Member3);
+
+        await contractAsProjectOwner2.inviteMember(2, project2Member1);
+        await contractAsProjectOwner2.inviteMember(2, project2Member2);
+        await contractAsProjectOwner2.inviteMember(2, project2Member3);
+    });
+
+    it('Verify invites mapping', async () => {
+        expect(await contractAsPublic1.invitesMapping(1, project1Member1)).to.equal(true);
+        expect(await contractAsPublic1.invitesMapping(1, project1Member2)).to.equal(true);
+        expect(await contractAsPublic1.invitesMapping(1, project1Member3)).to.equal(true);
+
+        expect(await contractAsPublic1.invitesMapping(2, project2Member1)).to.equal(true);
+        expect(await contractAsPublic1.invitesMapping(2, project2Member2)).to.equal(true);
+        expect(await contractAsPublic1.invitesMapping(2, project2Member3)).to.equal(true);
+    });
+
+    it('Disinvite members to project but not authorized', async () => {
+        await expect(contractAsPublic1.disinviteMember(1, public1))
+            .to.be.revertedWith('cannot edit project');
+
+        await expect(contractAsPublic1.disinviteMember(2, public1))
+            .to.be.revertedWith('cannot edit project');
+    });
+
+    it('Disinvite members from project by owners', async () => {
+        await contractAsProjectOwner1.disinviteMember(1, project1Member1);
+        await contractAsProjectOwner1.disinviteMember(1, project1Member2);
+        await contractAsProjectOwner1.disinviteMember(1, project1Member3);
+
+        await contractAsProjectOwner2.disinviteMember(2, project2Member1);
+        await contractAsProjectOwner2.disinviteMember(2, project2Member2);
+        await contractAsProjectOwner2.disinviteMember(2, project2Member3);
+    });
+
+    it('Verify invites mapping after disinvites', async () => {
+        expect(await contractAsPublic1.invitesMapping(1, project1Member1)).to.equal(false);
+        expect(await contractAsPublic1.invitesMapping(1, project1Member2)).to.equal(false);
+        expect(await contractAsPublic1.invitesMapping(1, project1Member3)).to.equal(false);
+
+        expect(await contractAsPublic1.invitesMapping(2, project2Member1)).to.equal(false);
+        expect(await contractAsPublic1.invitesMapping(2, project2Member2)).to.equal(false);
+        expect(await contractAsPublic1.invitesMapping(2, project2Member3)).to.equal(false);
+    });
+
+    it('Re-invite members to project by owners', async () => {
+        await contractAsProjectOwner1.inviteMember(1, project1Member1);
+        await contractAsProjectOwner1.inviteMember(1, project1Member2);
+        await contractAsProjectOwner1.inviteMember(1, project1Member3);
+
+        await contractAsProjectOwner2.inviteMember(2, project2Member1);
+        await contractAsProjectOwner2.inviteMember(2, project2Member2);
+        await contractAsProjectOwner2.inviteMember(2, project2Member3);
+    });
+});
