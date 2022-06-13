@@ -31,7 +31,7 @@ let deployer,
     project2Member2,
     project2Member3;
 
-describe('Intialize', () => {
+describe('Initialize', () => {
     it('Deploy GoingUpProjects Contract', async () => {
         const signers = await ethers.getSigners();
         deployer = await signers[0].getAddress();
@@ -424,6 +424,46 @@ describe('Project active/not active state', () => {
             data2.tags.join(),
             { value: price }
         );
+    });
+});
+
+describe('Project allow/disallow project members to edit', () => {
+    it('Allow members to edit projects but not authorized', async () => {
+        await expect(contractAsPublic1.allowMembersToEdit(1))
+            .to.be.revertedWith('not the project owner');
+
+        await expect(contractAsPublic1.allowMembersToEdit(2))
+            .to.be.revertedWith('not the project owner');
+    });
+
+    it('Allow members to edit projects by owners', async () => {
+        await contractAsProjectOwner1.allowMembersToEdit(1);
+        await contractAsProjectOwner2.allowMembersToEdit(2);
+
+        const project1 = await contractAsPublic1.projects(1);
+        const project2 = await contractAsPublic1.projects(2);
+
+        expect(project1.allowMembersToEdit).to.equal(true);
+        expect(project2.allowMembersToEdit).to.equal(true);
+    });
+
+    it('Disallow members to edit projects but not authorized', async () => {
+        await expect(contractAsPublic1.disallowMembersToEdit(1))
+            .to.be.revertedWith('not the project owner');
+
+        await expect(contractAsPublic1.disallowMembersToEdit(2))
+            .to.be.revertedWith('not the project owner');
+    });
+
+    it('Disallow members to edit projects by owners', async () => {
+        await contractAsProjectOwner1.disallowMembersToEdit(1);
+        await contractAsProjectOwner2.disallowMembersToEdit(2);
+
+        const project1 = await contractAsPublic1.projects(1);
+        const project2 = await contractAsPublic1.projects(2);
+
+        expect(project1.allowMembersToEdit).to.equal(false);
+        expect(project2.allowMembersToEdit).to.equal(false);
     });
 });
 
