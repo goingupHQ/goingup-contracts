@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
-contract GoingUpNFT is ERC1155, AccessControl, ERC1155Pausable {
+contract GoingUpUtilityTokens is ERC1155, AccessControl, ERC1155Pausable {
     struct TokenSetting {
         string description;
         string metadataURI;
@@ -19,6 +19,7 @@ contract GoingUpNFT is ERC1155, AccessControl, ERC1155Pausable {
     }
 
     string private _contractURI = "ipfs://QmYWnXmp5wLUeCNHsrS3PLtnFBXhEwpnKvmRhrjYY3id2J";
+
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
@@ -54,7 +55,7 @@ contract GoingUpNFT is ERC1155, AccessControl, ERC1155Pausable {
     }
 
     function pauseContract() public onlyPauser whenNotPaused { _pause(); }
-    
+
     function unpauseContract() public onlyPauser whenPaused { _unpause(); }
 
     function setTokenSettings(uint256 tokenID, string calldata _description, string calldata _metadataURI, uint _category, uint _tier, uint _price) public onlyAdmin {
@@ -78,9 +79,9 @@ contract GoingUpNFT is ERC1155, AccessControl, ERC1155Pausable {
         _mint(account, tokenID, qty, "");
     }
 
-    function manualMintBatch(address account, uint256[] calldata tokenIDs, uint256[] calldata qtys) public onlyMinter whenNotPaused {        
+    function manualMintBatch(address account, uint256[] calldata tokenIDs, uint256[] calldata qtys) public onlyMinter whenNotPaused {
         _mintBatch(account, tokenIDs, qtys, "");
-    }   
+    }
 
     function uri(uint256 tokenID) override public view returns (string memory) {
         TokenSetting memory ts = tokenSettings[tokenID];
@@ -105,7 +106,7 @@ contract GoingUpNFT is ERC1155, AccessControl, ERC1155Pausable {
         IERC721 tokenContract = IERC721(_tokenContract);
         tokenContract.safeTransferFrom(address(this), msg.sender, _tokenID);
     }
-    
+
     function withdrawERC1155(address _tokenContract, uint256 _tokenID, uint256 _amount, bytes memory _data) external onlyAdmin {
         IERC1155 tokenContract = IERC1155(_tokenContract);
         tokenContract.safeTransferFrom(address(this), msg.sender, _tokenID, _amount, _data);
