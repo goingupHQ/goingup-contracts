@@ -68,11 +68,13 @@ contract GoingUpUtilityTokens is ERC1155, AccessControl, ERC1155Pausable {
         });
     }
 
-    function mint(address account, uint256 tokenID, uint256 qty) public payable whenNotPaused {
+    event WriteMintData(address indexed to, address from, string data);
+    function mint(address account, uint256 tokenID, uint256 qty, string memory data) public payable whenNotPaused {
         TokenSetting memory ts = tokenSettings[tokenID];
         require(ts.category != 0 && ts.tier != 0, "Token setting not found");
         require(ts.price == 0 || msg.value >= ts.price * qty, "Amount sent not enough");
         _mint(account, tokenID, qty, "");
+        emit WriteMintData(account, msg.sender, data);
     }
 
     function manualMint(address account, uint256 tokenID, uint256 qty) public onlyMinter whenNotPaused {
