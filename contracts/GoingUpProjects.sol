@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.14;
+pragma solidity ^0.8.15;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /// @title GoingUP Platform Projects Smart Contract
 /// @author Mark Ibanez
@@ -20,6 +21,8 @@ contract GoingUpProjects {
         bool active;
         bool allowMembersToEdit;
     }
+
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     constructor () {
         owner = msg.sender;
@@ -70,7 +73,7 @@ contract GoingUpProjects {
     /// @notice Projects mapping
     mapping(uint256 => Project) public projects;
     /// @notice Project members array
-    mapping(uint256 => mapping(address => bool)) public membersMapping;
+    mapping(uint256 => EnumerableSet.AddressSet) private membersMapping;
     /// @notice Project invites array
     mapping(uint256 => mapping(address => bool)) public invitesMapping;
     /// @notice Project scores array
@@ -87,7 +90,7 @@ contract GoingUpProjects {
 
     modifier canEditProject(uint256 projectId) {
         Project memory project = projects[projectId];
-        require(msg.sender == project.owner || (project.allowMembersToEdit && membersMapping[projectId][msg.sender]), "cannot edit project");
+        require(msg.sender == project.owner || (project.allowMembersToEdit && membersMapping[projectId].contains(msg.sender)), "cannot edit project");
         _;
     }
 
@@ -239,6 +242,10 @@ contract GoingUpProjects {
         invitesMapping[id][member] = false;
         emit DisinviteMember(id, msg.sender, member);
     }
+
+    /// @notice This event is emitted when a member address accepts invitation to be a project member
+    /// @param projectId Project ID
+    event AcceptInvitation(uint indexed projectId, address member);
 
     /// @notice Withdraw native tokens (matic)
     function withdrawFunds() public onlyAdmin {
