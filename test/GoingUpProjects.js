@@ -164,7 +164,7 @@ describe('Create and update projects', () => {
     it('Project Owners creates their respective projects', async () => {
         const price = await contractAsProjectOwner1.price();
         const data = mockData[0];
-        await contractAsProjectOwner1.create(
+        await expect(contractAsProjectOwner1.create(
             data.name,
             data.description,
             data.started,
@@ -172,10 +172,10 @@ describe('Create and update projects', () => {
             data.primaryUrl,
             data.tags.join(),
             { value: price }
-        );
+        )).to.emit(contract, 'Create').withArgs(projectOwner1, 1);;
 
         const data2 = mockData[1];
-        await contractAsProjectOwner2.create(
+        await expect(contractAsProjectOwner2.create(
             data2.name,
             data2.description,
             data2.started,
@@ -183,7 +183,7 @@ describe('Create and update projects', () => {
             data2.primaryUrl,
             data2.tags.join(),
             { value: price }
-        );
+        )).to.emit(contract, 'Create').withArgs(projectOwner2, 2);
     });
 
     it('Check if projects have been created', async () => {
@@ -249,7 +249,7 @@ describe('Create and update projects', () => {
     it('Project Owners update their respective projects', async () => {
         const price = await contractAsProjectOwner1.price();
         const data1 = mockData[10];
-        await contractAsProjectOwner1.update(
+        await expect(contractAsProjectOwner1.update(
             1,
             data1.name,
             data1.description,
@@ -258,10 +258,10 @@ describe('Create and update projects', () => {
             data1.primaryUrl,
             data1.tags.join(),
             { value: price }
-        );
+        )).to.emit(contract, 'Update').withArgs(projectOwner1, 1);;
 
         const data2 = mockData[20];
-        await contractAsProjectOwner2.update(
+        await expect(contractAsProjectOwner2.update(
             2,
             data2.name,
             data2.description,
@@ -270,7 +270,7 @@ describe('Create and update projects', () => {
             data2.primaryUrl,
             data2.tags.join(),
             { value: price }
-        );
+        )).to.emit(contract, 'Update').withArgs(projectOwner2, 2);;
     });
 
     it('Check if projects have been updated', async () => {
@@ -318,8 +318,10 @@ describe('Project ownership', () => {
 
     it('Transfer project ownership by respective owners', async () => {
         const price = await contractAsProjectOwner1.price();
-        await contractAsProjectOwner1.transferProjectOwnership(1, public1, { value: price });
-        await contractAsProjectOwner2.transferProjectOwnership(2, public1, { value: price });
+        await expect(contractAsProjectOwner1.transferProjectOwnership(1, public1, { value: price }))
+            .to.emit(contract, 'TransferProjectOwnership').withArgs(1, projectOwner1, public1);
+        await expect(contractAsProjectOwner2.transferProjectOwnership(2, public1, { value: price }))
+            .to.emit(contract, 'TransferProjectOwnership').withArgs(2, projectOwner2, public1);
     });
 
     it('Verify if project owner has changed', async () => {
@@ -332,8 +334,10 @@ describe('Project ownership', () => {
 
     it('Transfer project ownership to original owners', async () => {
         const price = await contractAsProjectOwner1.price();
-        await contractAsPublic1.transferProjectOwnership(1, projectOwner1, { value: price });
-        await contractAsPublic1.transferProjectOwnership(2, projectOwner2, { value: price });
+        await expect(contractAsPublic1.transferProjectOwnership(1, projectOwner1, { value: price }))
+            .to.emit(contract, 'TransferProjectOwnership').withArgs(1, public1, projectOwner1);
+        await expect(contractAsPublic1.transferProjectOwnership(2, projectOwner2, { value: price }))
+            .to.emit(contract, 'TransferProjectOwnership').withArgs(2, public1, projectOwner2);
     });
 
     it('Verify if project ownership has been returned to original owners', async () => {
@@ -355,8 +359,8 @@ describe('Project active/not active state', () => {
     });
 
     it('Deactivate projects by owners', async () => {
-        await contractAsProjectOwner1.deactivate(1);
-        await contractAsProjectOwner2.deactivate(2);
+        await expect(contractAsProjectOwner1.deactivate(1)).to.emit(contract, 'Deactivate').withArgs(1, projectOwner1);
+        await expect(contractAsProjectOwner2.deactivate(2)).to.emit(contract, 'Deactivate').withArgs(2, projectOwner2);
     });
 
     it('Update deactivated projects', async () => {
@@ -395,8 +399,8 @@ describe('Project active/not active state', () => {
     });
 
     it('Activate projects by owners', async () => {
-        await contractAsProjectOwner1.activate(1);
-        await contractAsProjectOwner2.activate(2);
+        await expect(contractAsProjectOwner1.activate(1)).to.emit(contract, 'Activate').withArgs(1, projectOwner1);;
+        await expect(contractAsProjectOwner2.activate(2)).to.emit(contract, 'Activate').withArgs(2, projectOwner2);;
     });
 
     it('Update activated projects', async () => {
@@ -437,8 +441,10 @@ describe('Project allow/disallow project members to edit', () => {
     });
 
     it('Allow members to edit projects by owners', async () => {
-        await contractAsProjectOwner1.allowMembersToEdit(1);
-        await contractAsProjectOwner2.allowMembersToEdit(2);
+        await expect(contractAsProjectOwner1.allowMembersToEdit(1)).to.emit(contract, 'AllowMembersToEdit')
+            .withArgs(1, projectOwner1);
+        await expect(contractAsProjectOwner2.allowMembersToEdit(2)).to.emit(contract, 'AllowMembersToEdit')
+            .withArgs(2, projectOwner2);
 
         const project1 = await contractAsPublic1.projects(1);
         const project2 = await contractAsPublic1.projects(2);
@@ -456,8 +462,10 @@ describe('Project allow/disallow project members to edit', () => {
     });
 
     it('Disallow members to edit projects by owners', async () => {
-        await contractAsProjectOwner1.disallowMembersToEdit(1);
-        await contractAsProjectOwner2.disallowMembersToEdit(2);
+        await expect(contractAsProjectOwner1.disallowMembersToEdit(1)).to.emit(contract, 'DisallowMembersToEdit')
+            .withArgs(1, projectOwner1);;
+        await expect(contractAsProjectOwner2.disallowMembersToEdit(2)).to.emit(contract, 'DisallowMembersToEdit')
+            .withArgs(2, projectOwner2);;
 
         const project1 = await contractAsPublic1.projects(1);
         const project2 = await contractAsPublic1.projects(2);
@@ -477,13 +485,25 @@ describe('Project members', () => {
     });
 
     it('Invite members to project by owners', async () => {
-        await contractAsProjectOwner1.inviteMember(1, project1Member1);
-        await contractAsProjectOwner1.inviteMember(1, project1Member2);
-        await contractAsProjectOwner1.inviteMember(1, project1Member3);
+        await expect(contractAsProjectOwner1.inviteMember(1, project1Member1))
+            .to.emit(contract, 'InviteMember')
+            .withArgs(1, projectOwner1, project1Member1);
+        await expect(contractAsProjectOwner1.inviteMember(1, project1Member2))
+            .to.emit(contract, 'InviteMember')
+            .withArgs(1, projectOwner1, project1Member2);
+        await expect(contractAsProjectOwner1.inviteMember(1, project1Member3))
+            .to.emit(contract, 'InviteMember')
+            .withArgs(1, projectOwner1, project1Member3);
 
-        await contractAsProjectOwner2.inviteMember(2, project2Member1);
-        await contractAsProjectOwner2.inviteMember(2, project2Member2);
-        await contractAsProjectOwner2.inviteMember(2, project2Member3);
+        await expect(contractAsProjectOwner2.inviteMember(2, project2Member1))
+            .to.emit(contract, 'InviteMember')
+            .withArgs(2, projectOwner2, project2Member1);
+        await expect(contractAsProjectOwner2.inviteMember(2, project2Member2))
+            .to.emit(contract, 'InviteMember')
+            .withArgs(2, projectOwner2, project2Member2);
+        await expect(contractAsProjectOwner2.inviteMember(2, project2Member3))
+            .to.emit(contract, 'InviteMember')
+            .withArgs(2, projectOwner2, project2Member3);
     });
 
     it('Verify invites mapping', async () => {
@@ -505,13 +525,25 @@ describe('Project members', () => {
     });
 
     it('Disinvite members from project by owners', async () => {
-        await contractAsProjectOwner1.disinviteMember(1, project1Member1);
-        await contractAsProjectOwner1.disinviteMember(1, project1Member2);
-        await contractAsProjectOwner1.disinviteMember(1, project1Member3);
+        await expect(contractAsProjectOwner1.disinviteMember(1, project1Member1))
+            .to.emit(contract, 'DisinviteMember')
+            .withArgs(1, projectOwner1, project1Member1);
+        await expect(contractAsProjectOwner1.disinviteMember(1, project1Member2))
+            .to.emit(contract, 'DisinviteMember')
+            .withArgs(1, projectOwner1, project1Member2);
+        await expect(contractAsProjectOwner1.disinviteMember(1, project1Member3))
+            .to.emit(contract, 'DisinviteMember')
+            .withArgs(1, projectOwner1, project1Member3);
 
-        await contractAsProjectOwner2.disinviteMember(2, project2Member1);
-        await contractAsProjectOwner2.disinviteMember(2, project2Member2);
-        await contractAsProjectOwner2.disinviteMember(2, project2Member3);
+        await expect(contractAsProjectOwner2.disinviteMember(2, project2Member1))
+            .to.emit(contract, 'DisinviteMember')
+            .withArgs(2, projectOwner2, project2Member1);
+        await expect(contractAsProjectOwner2.disinviteMember(2, project2Member2))
+            .to.emit(contract, 'DisinviteMember')
+            .withArgs(2, projectOwner2, project2Member2);
+        await expect(contractAsProjectOwner2.disinviteMember(2, project2Member3))
+            .to.emit(contract, 'DisinviteMember')
+            .withArgs(2, projectOwner2, project2Member3);
     });
 
     it('Verify invites mapping after disinvites', async () => {
@@ -525,12 +557,24 @@ describe('Project members', () => {
     });
 
     it('Re-invite members to project by owners', async () => {
-        await contractAsProjectOwner1.inviteMember(1, project1Member1);
-        await contractAsProjectOwner1.inviteMember(1, project1Member2);
-        await contractAsProjectOwner1.inviteMember(1, project1Member3);
+        await expect(contractAsProjectOwner1.inviteMember(1, project1Member1))
+            .to.emit(contract, 'InviteMember')
+            .withArgs(1, projectOwner1, project1Member1);
+        await expect(contractAsProjectOwner1.inviteMember(1, project1Member2))
+            .to.emit(contract, 'InviteMember')
+            .withArgs(1, projectOwner1, project1Member2);
+        await expect(contractAsProjectOwner1.inviteMember(1, project1Member3))
+            .to.emit(contract, 'InviteMember')
+            .withArgs(1, projectOwner1, project1Member3);
 
-        await contractAsProjectOwner2.inviteMember(2, project2Member1);
-        await contractAsProjectOwner2.inviteMember(2, project2Member2);
-        await contractAsProjectOwner2.inviteMember(2, project2Member3);
+        await expect(contractAsProjectOwner2.inviteMember(2, project2Member1))
+            .to.emit(contract, 'InviteMember')
+            .withArgs(2, projectOwner2, project2Member1);
+        await expect(contractAsProjectOwner2.inviteMember(2, project2Member2))
+            .to.emit(contract, 'InviteMember')
+            .withArgs(2, projectOwner2, project2Member2);
+        await expect(contractAsProjectOwner2.inviteMember(2, project2Member3))
+            .to.emit(contract, 'InviteMember')
+            .withArgs(2, projectOwner2, project2Member3);
     });
 });
