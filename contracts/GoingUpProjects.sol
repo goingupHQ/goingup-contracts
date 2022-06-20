@@ -214,7 +214,7 @@ contract GoingUpProjects {
     /// @param projectId Project ID
     function disallowMembersToEdit(uint256 projectId) public onlyProjectOwner(projectId) {
         projects[projectId].allowMembersToEdit = false;
-        emit AllowMembersToEdit(projectId, msg.sender);
+        emit DisallowMembersToEdit(projectId, msg.sender);
     }
 
     /// @notice This event is emitted when an authorized address invites an address to be a project member
