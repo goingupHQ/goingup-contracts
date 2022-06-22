@@ -577,4 +577,35 @@ describe('Project members', () => {
             .to.emit(contract, 'InviteMember')
             .withArgs(2, projectOwner2, project2Member3);
     });
+
+    it('Accept invitation by public1 (not invited, should revert)', async () => {
+        await expect(contractAsPublic1.acceptProjectInvitation(1)).to.be.revertedWith('not invited to project');
+        await expect(contractAsPublic1.acceptProjectInvitation(2)).to.be.revertedWith('not invited to project');
+    });
+
+    it('Accept invitation by invited members', async () => {
+        await expect(contractAsProject1Member1.acceptProjectInvitation(1))
+            .to.emit(contract, 'AcceptProjectInvitation')
+            .withArgs(1, project1Member1);
+
+        await expect(contractAsProject1Member2.acceptProjectInvitation(1))
+            .to.emit(contract, 'AcceptProjectInvitation')
+            .withArgs(1, project1Member2);
+
+        await expect(contractAsProject1Member3.acceptProjectInvitation(1))
+            .to.emit(contract, 'AcceptProjectInvitation')
+            .withArgs(1, project1Member3);
+
+        await expect(contractAsProject2Member1.acceptProjectInvitation(2))
+            .to.emit(contract, 'AcceptProjectInvitation')
+            .withArgs(2, project2Member1);
+
+        await expect(contractAsProject2Member2.acceptProjectInvitation(2))
+            .to.emit(contract, 'AcceptProjectInvitation')
+            .withArgs(2, project2Member2);
+
+        await expect(contractAsProject2Member3.acceptProjectInvitation(2))
+            .to.emit(contract, 'AcceptProjectInvitation')
+            .withArgs(2, project2Member3);
+    })
 });
