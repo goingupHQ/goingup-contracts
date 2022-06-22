@@ -224,10 +224,11 @@ contract GoingUpProjects {
     event InviteMember(uint256 indexed projectId, address from, address to);
 
     /// @notice Invite a member to project
+    /// @param projectId Project ID
     /// @param member Address to invite to become a member of the project
-    function inviteMember(uint256 id, address member) public canEditProject(id) {
-        invitesMapping[id][member] = true;
-        emit InviteMember(id, msg.sender, member);
+    function inviteMember(uint256 projectId, address member) public canEditProject(projectId) {
+        invitesMapping[projectId][member] = true;
+        emit InviteMember(projectId, msg.sender, member);
     }
 
     /// @notice This event is emitted when an authorized address disinvites a pending invite
@@ -237,15 +238,24 @@ contract GoingUpProjects {
     event DisinviteMember(uint256 indexed projectId, address from, address to);
 
     /// @notice Disinvite member from project
+    /// @param projectId Project ID
     /// @param member Address to disinvite from project
-    function disinviteMember(uint256 id, address member) public canEditProject(id) {
-        invitesMapping[id][member] = false;
-        emit DisinviteMember(id, msg.sender, member);
+    function disinviteMember(uint256 projectId, address member) public canEditProject(projectId) {
+        invitesMapping[projectId][member] = false;
+        emit DisinviteMember(projectId, msg.sender, member);
     }
 
     /// @notice This event is emitted when a member address accepts invitation to be a project member
     /// @param projectId Project ID
-    event AcceptInvitation(uint indexed projectId, address member);
+    event AcceptProjectInvitation(uint indexed projectId, address member);
+
+    /// @notice Accept invitation to become a member of the project
+    /// @param projectId Project ID
+    function acceptProjectInvitation(uint256 projectId) public {
+        require(invitesMapping[projectId][msg.sender], "not invited to project");
+        membersMapping[projectId].add(msg.sender);
+        emit AcceptProjectInvitation(projectId, msg.sender);
+    }
 
     /// @notice Withdraw native tokens (matic)
     function withdrawFunds() public onlyAdmin {
