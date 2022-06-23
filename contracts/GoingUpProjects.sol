@@ -293,6 +293,7 @@ contract GoingUpProjects {
     /// @param member Member address to remove
     /// @param reason Reason why member is to be removed
     function removeMember(uint256 projectId, address member, string memory reason) public canEditProject(projectId) {
+        require(membersMapping[projectId].contains(msg.sender), "cannot remove a non-member");
         membersMapping[projectId].remove(member);
         memberRolesMapping[projectId][member] = "";
         emit RemoveMember(projectId, msg.sender, member, reason);

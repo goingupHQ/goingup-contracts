@@ -670,4 +670,19 @@ describe('Project members', () => {
     it('Non-member leaves project (should revert)', async () => {
         await expect(contractAsProject2Member1.leaveProject(1, 'no reason')).to.be.revertedWith('not a member of project');
     });
+
+    it('Project 1 owner invites public 1 address', async () => {
+        await expect(contractAsProjectOwner1.inviteMember(1, public1, 'test')).to.emit(contract, 'InviteMember')
+            .withArgs(1, projectOwner1, public1, 'test');
+    });
+
+    it('Public 1 accepts project 1 owner invite', async () => {
+        await expect(contractAsPublic1.acceptProjectInvitation(1)).to.emit(contract, 'AcceptProjectInvitation')
+            .withArgs(1, public1);
+    });
+
+    it('Unauthorized address removes project member', async () => {
+        await expect(contractAsPublic1.removeMember(1, project1Member1, 'testing remove function'))
+            .to.be.revertedWith('cannot edit project');
+    });
 });
