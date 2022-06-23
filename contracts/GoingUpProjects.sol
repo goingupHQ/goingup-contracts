@@ -273,7 +273,7 @@ contract GoingUpProjects {
 
     /// @notice Leave project
     /// @param projectId Project ID
-    function leaveProject(uint256 projectId, string reason) public {
+    function leaveProject(uint256 projectId, string memory reason) public {
         require(projects[projectId].owner != msg.sender, "owner cannot leave project");
         require(membersMapping[projectId].contains(msg.sender), "not a member of project");
         membersMapping[projectId].remove(msg.sender);
@@ -294,7 +294,7 @@ contract GoingUpProjects {
     /// @param reason Reason why member is to be removed
     function removeMember(uint256 projectId, address member, string memory reason) public canEditProject(projectId) {
         membersMapping[projectId].remove(member);
-        memberRolesMapping[projectId][address] = "";
+        memberRolesMapping[projectId][member] = "";
         emit RemoveMember(projectId, msg.sender, member, reason);
     }
 
