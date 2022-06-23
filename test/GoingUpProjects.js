@@ -654,8 +654,8 @@ describe('Project members', () => {
     });
 
     it('Public 1 leaves project', async () => {
-        await expect(contractAsPublic1.leaveProject(1)).to.emit(contract, 'LeaveProject')
-            .withArgs(1, public1);
+        await expect(contractAsPublic1.leaveProject(1, 'need to leave')).to.emit(contract, 'LeaveProject')
+            .withArgs(1, public1, 'need to leave');
     });
 
     it('Check if public 1 is no longer a member of project 1', async () => {
@@ -664,10 +664,10 @@ describe('Project members', () => {
     });
 
     it('Project 1 owner leaves project (should revert)', async () => {
-        await expect(contractAsProjectOwner1.leaveProject(1)).to.be.revertedWith('owner cannot leave project');
+        await expect(contractAsProjectOwner1.leaveProject(1, 'no reason')).to.be.revertedWith('owner cannot leave project');
     });
 
     it('Non-member leaves project (should revert)', async () => {
-        await expect(contractAsProject2Member1.leaveProject(1)).to.be.revertedWith('not a member of project');
+        await expect(contractAsProject2Member1.leaveProject(1, 'no reason')).to.be.revertedWith('not a member of project');
     });
 });
