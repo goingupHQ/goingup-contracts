@@ -268,16 +268,32 @@ contract GoingUpProjects {
     /// @notice This event is emitted when a member leaves a project
     /// @param projectId Project ID
     /// @param member Member address
-    event LeaveProject(uint256 indexed projectId, address member);
+    /// @param reason Reason for leaving project
+    event LeaveProject(uint256 indexed projectId, address member, string reason);
 
     /// @notice Leave project
     /// @param projectId Project ID
-    function leaveProject(uint256 projectId) public {
+    function leaveProject(uint256 projectId, string reason) public {
         require(projects[projectId].owner != msg.sender, "owner cannot leave project");
         require(membersMapping[projectId].contains(msg.sender), "not a member of project");
         membersMapping[projectId].remove(msg.sender);
         memberRolesMapping[projectId][msg.sender] = "";
-        emit LeaveProject(projectId, msg.sender);
+        emit LeaveProject(projectId, msg.sender, reason);
+    }
+
+    /// @notice This event is emitted when authorized address removes a member from project
+    /// @param projectId Project ID
+    /// @param removedBy Remover address
+    /// @param memberRemoved Member address removed from project
+    /// @param reason Reason why member was removed
+    event RemoveMember(uint256 projectId, address removedBy, address memberRemoved, string reason);
+
+    /// @notice Remove member from project (only accessible to authorized addresses)
+    /// @param projectId Project ID
+    /// @param member Member address to remove
+    /// @param reason Reason why member is to be removed
+    function removeMember(uint256 projectId,address member, string memory reason) public canEditProject(projectId) {
+        members
     }
 
     /// @notice Get project members
