@@ -292,8 +292,10 @@ contract GoingUpProjects {
     /// @param projectId Project ID
     /// @param member Member address to remove
     /// @param reason Reason why member is to be removed
-    function removeMember(uint256 projectId,address member, string memory reason) public canEditProject(projectId) {
-        members
+    function removeMember(uint256 projectId, address member, string memory reason) public canEditProject(projectId) {
+        membersMapping[projectId].remove(member);
+        memberRolesMapping[projectId][address] = "";
+        emit RemoveMember(projectId, msg.sender, member, reason);
     }
 
     /// @notice Get project members
