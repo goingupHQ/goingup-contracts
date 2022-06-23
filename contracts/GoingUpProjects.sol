@@ -72,14 +72,19 @@ contract GoingUpProjects {
 
     /// @notice Projects mapping
     mapping(uint256 => Project) public projects;
-    /// @notice Project members array
+
     mapping(uint256 => EnumerableSet.AddressSet) private membersMapping;
+    mapping(uint256 => mapping(address => string)) public memberRolesMapping;
+
     /// @notice Project invites array
     mapping(uint256 => mapping(address => bool)) public invitesMapping;
+
     /// @notice Project scores array
     mapping(uint256 => uint[]) public scores;
+
     /// @notice Project reviews array
     mapping(uint256 => string[]) public reviews;
+
     /// @notice Project extra data array
     mapping(uint256 => string[]) public extraData;
 
@@ -221,14 +226,16 @@ contract GoingUpProjects {
     /// @param projectId Project ID
     /// @param from Authorized address issuing the invitation
     /// @param to Address invited to become a member of the project
-    event InviteMember(uint256 indexed projectId, address from, address to);
+    /// @param role Member role in project
+    event InviteMember(uint256 indexed projectId, address from, address to, string role);
 
     /// @notice Invite a member to project
     /// @param projectId Project ID
     /// @param member Address to invite to become a member of the project
-    function inviteMember(uint256 projectId, address member) public canEditProject(projectId) {
+    function inviteMember(uint256 projectId, address member, string memory role) public canEditProject(projectId) {
         invitesMapping[projectId][member] = true;
-        emit InviteMember(projectId, msg.sender, member);
+        memberRolesMapping[projectId][member] = role;
+        emit InviteMember(projectId, msg.sender, member, role);
     }
 
     /// @notice This event is emitted when an authorized address disinvites a pending invite
@@ -242,12 +249,13 @@ contract GoingUpProjects {
     /// @param member Address to disinvite from project
     function disinviteMember(uint256 projectId, address member) public canEditProject(projectId) {
         invitesMapping[projectId][member] = false;
+        memberRolesMapping[projectId][member] = "";
         emit DisinviteMember(projectId, msg.sender, member);
     }
 
     /// @notice This event is emitted when a member address accepts invitation to be a project member
     /// @param projectId Project ID
-    event AcceptProjectInvitation(uint indexed projectId, address member);
+    event AcceptProjectInvitation(uint256 indexed projectId, address member);
 
     /// @notice Accept invitation to become a member of the project
     /// @param projectId Project ID
@@ -255,6 +263,27 @@ contract GoingUpProjects {
         require(invitesMapping[projectId][msg.sender], "not invited to project");
         membersMapping[projectId].add(msg.sender);
         emit AcceptProjectInvitation(projectId, msg.sender);
+    }
+
+    /// @notice This event is emitted when a member leaves a project
+    /// @param projectId Project ID
+    /// @param member Member address
+    event LeaveProject(uint256 indexed projectId, address member);
+
+    /// @notice Leave project
+    /// @param projectId Project ID
+    function leaveProject(uint256 projectId) public {
+        require(projects[projectId].owner != msg.sender, "owner cannot leave project");
+        require(membersMapping[projectId].contains(msg.sender), "not a member of project");
+        membersMapping[projectId].remove(msg.sender);
+        memberRolesMapping[projectId][msg.sender] = "";
+        emit LeaveProject(projectId, msg.sender);
+    }
+
+    /// @notice Get project members
+    /// @param projectId Project ID
+    function getProjectMembers(uint256 projectId) public view returns (address[] memory) {
+        return membersMapping[projectId].values();
     }
 
     /// @notice Withdraw native tokens (matic)
