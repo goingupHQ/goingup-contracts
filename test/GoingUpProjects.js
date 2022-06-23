@@ -637,4 +637,37 @@ describe('Project members', () => {
         expect(member2).to.equal(role);
         expect(member3).to.equal(role);
     });
+
+    it('Project 1 owner invites public 1 address', async () => {
+        await expect(contractAsProjectOwner1.inviteMember(1, public1, 'test')).to.emit(contract, 'InviteMember')
+            .withArgs(1, projectOwner1, public1, 'test');
+    });
+
+    it('Public 1 accepts project 1 owner invite', async () => {
+        await expect(contractAsPublic1.acceptProjectInvitation(1)).to.emit(contract, 'AcceptProjectInvitation')
+            .withArgs(1, public1);
+    });
+
+    it('Check if public 1 is member of project 1', async () => {
+        const members = await contractAsPublic1.getProjectMembers(1);
+        expect(members).to.include(public1);
+    });
+
+    it('Public 1 leaves project', async () => {
+        await expect(contractAsPublic1.leaveProject(1)).to.emit(contract, 'LeaveProject')
+            .withArgs(1, public1);
+    });
+
+    it('Check if public 1 is no longer a member of project 1', async () => {
+        const members = await contractAsPublic1.getProjectMembers(1);
+        expect(members).to.not.include(public1);
+    });
+
+    it('Project 1 owner leaves project (should revert)', async () => {
+        await expect(contractAsProjectOwner1.leaveProject(1)).to.be.revertedWith('owner cannot leave project');
+    });
+
+    it('Non-member leaves project (should revert)', async () => {
+        await expect(contractAsProject2Member1.leaveProject(1)).to.be.revertedWith('not a member of project');
+    });
 });
