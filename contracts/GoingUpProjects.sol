@@ -321,6 +321,22 @@ contract GoingUpProjects {
         return membersMapping[projectId].values();
     }
 
+    /// @notice This event is emitted when an authorized address sets project extra data
+    /// @param projectId Project ID
+    /// @param setBy Authorized address adding extra data
+    /// @param key Key for extra data
+    /// @param value Value for extra data
+    event SetProjectExtraData(uint256 indexed projectId, address setBy, string key, string value);
+
+    /// @notice Set project extra data
+    /// @param projectId Project ID
+    /// @param key Extra data key
+    /// @param value Extra data value
+    function setProjectExtraData(uint256 projectId, string memory key, string memory value) public canEditProject(projectId) {
+        extraData[projectId][key] = value;
+        emit SetProjectExtraData(projectId, msg.sender, key, value);
+    }
+
     /// @notice Withdraw native tokens (matic)
     function withdrawFunds() public onlyAdmin {
         payable(msg.sender).transfer(address(this).balance);
