@@ -685,4 +685,25 @@ describe('Project members', () => {
         await expect(contractAsPublic1.removeMember(1, project1Member1, 'testing remove function'))
             .to.be.revertedWith('cannot edit project');
     });
+
+    it('Project 1 owner removes project member', async () => {
+        await expect(contractAsProjectOwner1.removeMember(1, public1, 'was never a member'))
+            .to.emit(contract, 'RemoveMember')
+            .withArgs(1, projectOwner1, public1, 'was never a member');
+    });
+
+    it('Change project1 member1 role by unauthorize address', async () => {
+        await expect(contractAsProject1Member1.changeMemberRole(1, project1Member1, 'Associate'))
+            .to.be.revertedWith('cannot edit project');
+    });
+
+    it('Change project1 member1 role by project owner', async () => {
+        await expect(contractAsProjectOwner1.changeMemberRole(1, project1Member1, 'Associate'))
+            .to.emit(contract, 'ChangeMemberRole')
+            .withArgs(1, projectOwner1, project1Member1, 'Associate');
+    });
+
+    it('Verify project1 member1 role has changed', async () => {
+        expect(await contract.memberRolesMapping(1, project1Member1)).to.equal('Associate');
+    });
 });

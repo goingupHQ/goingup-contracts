@@ -85,8 +85,8 @@ contract GoingUpProjects {
     /// @notice Project reviews array
     mapping(uint256 => string[]) public reviews;
 
-    /// @notice Project extra data array
-    mapping(uint256 => string[]) public extraData;
+    /// @notice Project extra data storage
+    mapping(uint256 => mapping(string => string)) public extraData;
 
     modifier onlyProjectOwner(uint256 projectId) {
         require(msg.sender == projects[projectId].owner, "not the project owner");
@@ -293,10 +293,26 @@ contract GoingUpProjects {
     /// @param member Member address to remove
     /// @param reason Reason why member is to be removed
     function removeMember(uint256 projectId, address member, string memory reason) public canEditProject(projectId) {
-        require(membersMapping[projectId].contains(msg.sender), "cannot remove a non-member");
+        require(membersMapping[projectId].contains(member), "cannot remove a non-member");
         membersMapping[projectId].remove(member);
         memberRolesMapping[projectId][member] = "";
         emit RemoveMember(projectId, msg.sender, member, reason);
+    }
+
+    /// @notice This event is emitted when an authorized address changes a member address role in project
+    /// @param projectId Project ID
+    /// @param member Member address
+    /// @param newRole New role in project
+    event ChangeMemberRole(uint256 projectId, address changedBy, address member, string newRole);
+
+    /// @notice Change member role in project (only accessible to authorized addresses)
+    /// @param projectId Project ID
+    /// @param member Member address to change role for
+    /// @param newRole New role in project
+    function changeMemberRole(uint256 projectId, address member, string memory newRole) public canEditProject(projectId) {
+        require(membersMapping[projectId].contains(member), "cannot change role of non-member");
+        memberRolesMapping[projectId][member] = newRole;
+        emit ChangeMemberRole(projectId, msg.sender, member, newRole);
     }
 
     /// @notice Get project members
