@@ -707,3 +707,20 @@ describe('Project members', () => {
         expect(await contract.memberRolesMapping(1, project1Member1)).to.equal('Associate');
     });
 });
+
+describe('Extra data', () => {
+    it('Set extra project data by unauthorized address', async () => {
+        await expect(contractAsPublic1.setProjectExtraData(1, 'test', 'test'))
+            .to.be.revertedWith('cannot edit project');
+    });
+
+    it('Set extra project data by project owner', async () => {
+        await expect(contractAsProjectOwner1.setProjectExtraData(1, 'qwer', 'asdf'))
+            .to.emit(contract, 'SetProjectExtraData')
+            .withArgs(1, projectOwner1, 'qwer', 'asdf');
+    });
+
+    it('Verify extra project data has changed', async () => {
+        expect(await contract.extraData(1, 'qwer')).to.equal('asdf');
+    });
+});
