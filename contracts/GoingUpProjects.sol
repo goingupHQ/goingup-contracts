@@ -79,12 +79,6 @@ contract GoingUpProjects {
     /// @notice Project invites array
     mapping(uint256 => mapping(address => bool)) public invitesMapping;
 
-    /// @notice Project scores array
-    mapping(uint256 => uint[]) public scores;
-
-    /// @notice Project reviews array
-    mapping(uint256 => string[]) public reviews;
-
     /// @notice Project extra data storage
     mapping(uint256 => mapping(string => string)) public extraData;
 
@@ -335,6 +329,22 @@ contract GoingUpProjects {
     function setProjectExtraData(uint256 projectId, string memory key, string memory value) public canEditProject(projectId) {
         extraData[projectId][key] = value;
         emit SetProjectExtraData(projectId, msg.sender, key, value);
+    }
+
+    /// @notice This event is emitted when a score and/or comment is added to a project
+    /// @param projectId Project ID
+    /// @param reviewedBy Authorized address adding score and/or comment
+    /// @param score Score (-5 to +5)
+    /// @param comments Comments
+    event SubmitProjectReview(uint256 indexed projectId, address reviewedBy, int8 score, string comments);
+
+    /// @notice Add score and/or comment to project
+    /// @param projectId Project ID
+    /// @param score Score (-5 to +5)
+    /// @param comments Comments
+    function submitProjectReview(uint256 projectId, int8 score, string memory comments) public payable sentEnough {
+        require(score >= -5 && score <= 5, "score must be between -5 and +5");
+        emit SubmitProjectReview(projectId, msg.sender, score, comments);
     }
 
     /// @notice Withdraw native tokens (matic)

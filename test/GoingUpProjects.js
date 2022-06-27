@@ -724,3 +724,74 @@ describe('Extra data', () => {
         expect(await contract.extraData(1, 'qwer')).to.equal('asdf');
     });
 });
+
+describe('Project score/comment', () => {
+    it('Submit score without sending fee', async () => {
+        await expect(contractAsPublic1.submitProjectReview(1, 0, 'normal score'))
+            .to.be.revertedWith('did not send enough');
+    });
+
+    it('Submit score but not enough amount sent', async () => {
+        await expect(contractAsPublic1.submitProjectReview(1, 0, 'normal score', { value: 1 }))
+            .to.be.revertedWith('did not send enough');
+    });
+
+    it('Submit project score less than -5', async () => {
+        const price = await contractAsPublic1.price();
+        await expect(contractAsPublic1
+            .submitProjectReview(1, -6, 'not a good project but not bad either', { value: price }))
+            .to.be.revertedWith('score must be between -5 and +5');
+        await expect(contractAsPublic1
+            .submitProjectReview(1, -12, 'not a good project but not bad either', { value: price }))
+            .to.be.revertedWith('score must be between -5 and +5');
+        await expect(contractAsPublic1
+            .submitProjectReview(1, -56, 'not a good project but not bad either', { value: price }))
+            .to.be.revertedWith('score must be between -5 and +5');
+    });
+
+    it('Submit project score greater than 5', async () => {
+        const price = await contractAsPublic1.price();
+        await expect(contractAsPublic1
+            .submitProjectReview(1, 6, 'not a good project but not bad either', { value: price }))
+            .to.be.revertedWith('score must be between -5 and +5');
+        await expect(contractAsPublic1
+            .submitProjectReview(1, 12, 'not a good project but not bad either', { value: price }))
+            .to.be.revertedWith('score must be between -5 and +5');
+        await expect(contractAsPublic1
+            .submitProjectReview(1, 56, 'not a good project but not bad either', { value: price }))
+            .to.be.revertedWith('score must be between -5 and +5');
+    });
+
+    it('Submit project scores/comments', async () => {
+        const price = await contractAsPublic1.price();
+        await expect(contractAsProject2Member1
+            .submitProjectReview(1, 0, 'not a good project but not bad either', { value: price }))
+            .to.emit(contract, 'SubmitProjectReview')
+            .withArgs(1, project2Member1, 0, 'not a good project but not bad either');
+
+        await expect(contractAsProject2Member2
+            .submitProjectReview(1, 5, 'this is an awesome project', { value: price }))
+            .to.emit(contract, 'SubmitProjectReview')
+            .withArgs(1, project2Member2, 5, 'this is an awesome project');
+
+        await expect(contractAsProject2Member3
+            .submitProjectReview(1, -5, 'this is a terrible project', { value: price }))
+            .to.emit(contract, 'SubmitProjectReview')
+            .withArgs(1, project2Member3, -5, 'this is a terrible project');
+
+        await expect(contractAsProject1Member1
+            .submitProjectReview(2, 0, 'not a good project but not bad either', { value: price }))
+            .to.emit(contract, 'SubmitProjectReview')
+            .withArgs(2, project1Member1, 0, 'not a good project but not bad either');
+
+        await expect(contractAsProject1Member2
+            .submitProjectReview(2, 5, 'this is an awesome project', { value: price }))
+            .to.emit(contract, 'SubmitProjectReview')
+            .withArgs(2, project1Member2, 5, 'this is an awesome project');
+
+        await expect(contractAsProject1Member3
+            .submitProjectReview(2, -5, 'this is a terrible project', { value: price }))
+            .to.emit(contract, 'SubmitProjectReview')
+            .withArgs(2, project1Member3, -5, 'this is a terrible project');
+    });
+});
