@@ -131,6 +131,31 @@ describe('Contract variable "price"', () => {
     });
 });
 
+describe('Contract variable "freeMembers"', () => {
+    it('Variable "freeMembers" getter', async () => {
+        expect(await contractAsPublic1.freeMembers()).to.equal(5);
+    });
+
+    it('Non admin address tries to set freeMembers', async () => {
+        await expect(contractAsPublic1.setFreeMembers(3)).to.be.revertedWith('not admin');
+    });
+
+    it('Owner address sets freeMembers', async () => {
+        await expect(contractAsOwner.setFreeMembers(1))
+            .to.emit(contract, 'FreeMembersChanged').withArgs(owner, 1);
+    });
+
+    it('Admin1 address sets freeMembers', async () => {
+        await expect(contractAsAdmin1.setFreeMembers(2))
+            .to.emit(contract, 'FreeMembersChanged').withArgs(admin1, 2);
+    });
+
+    it('Admin2 address sets freeMembers', async () => {
+        await expect(contractAsAdmin2.setFreeMembers(5))
+            .to.emit(contract, 'FreeMembersChanged').withArgs(admin2, 5);
+    });
+});
+
 describe('Create and update projects', () => {
     it('Create project without sending payment', async () => {
         const data = mockData[0];
