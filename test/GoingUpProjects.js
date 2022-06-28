@@ -1,6 +1,7 @@
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const mockData = require('./mock-data.json');
+const { parseUnits } = ethers.utils;
 
 let contract,
     contractAsDeployer,
@@ -116,7 +117,7 @@ describe('Contract admins', () => {
 
 describe('Contract variable "price"', () => {
     it('Variable "price" getter', async () => {
-        expect(await contractAsPublic1.price()).to.equal('10000000000000000');
+        expect(await contractAsPublic1.price()).to.equal(parseUnits('0.01'));
     });
 
     it('Non admin address tries to set price', async () => {
@@ -124,10 +125,10 @@ describe('Contract variable "price"', () => {
     });
 
     it('Admin address sets price', async () => {
-        await contractAsAdmin1.setPrice('25000000000000000');
-        expect(await contractAsPublic1.price()).to.equal('25000000000000000');
-        await contractAsAdmin2.setPrice('35000000000000000');
-        expect(await contractAsPublic1.price()).to.equal('35000000000000000');
+        await contractAsAdmin1.setPrice(parseUnits('0.025'));
+        expect(await contractAsPublic1.price()).to.equal(parseUnits('0.025'));
+        await contractAsAdmin2.setPrice(parseUnits('0.035'));
+        expect(await contractAsPublic1.price()).to.equal(parseUnits('0.035'));
     });
 });
 
@@ -153,6 +154,64 @@ describe('Contract variable "freeMembers"', () => {
     it('Admin2 address sets freeMembers', async () => {
         await expect(contractAsAdmin2.setFreeMembers(5))
             .to.emit(contract, 'FreeMembersChanged').withArgs(admin2, 5);
+    });
+});
+
+describe('Contract variable "addMemberPrice"', () => {
+    it('Variable "addMemberPrice" getter', async () => {
+        expect(await contractAsPublic1.addMemberPrice()).to.equal(parseUnits('0.1'));
+    }).timeout(5000);
+
+    it('Non admin address tries to set addMemberPrice', async () => {
+        await expect(contractAsPublic1.setAddMemberPrice(parseUnits('0.25'))).to.be.revertedWith('not admin');
+    });
+
+    it('Owner address sets addMemberPrice', async () => {
+        await expect(contractAsOwner.setAddMemberPrice(parseUnits('0.25')))
+            .to.emit(contract, 'AddMemberPriceChanged').withArgs(owner, parseUnits('0.25'));
+    });
+
+    it('Admin1 address sets addMemberPrice', async () => {
+        await expect(contractAsAdmin1.setAddMemberPrice(parseUnits('0.35')))
+            .to.emit(contract, 'AddMemberPriceChanged').withArgs(admin1, parseUnits('0.35'));
+    });
+
+    it('Admin2 address sets addMemberPrice', async () => {
+        await expect(contractAsAdmin2.setAddMemberPrice(parseUnits('0.1')))
+            .to.emit(contract, 'AddMemberPriceChanged').withArgs(admin2, parseUnits('0.1'));
+    });
+});
+
+describe('Contract variable "addMemberPriceOverrides"', () => {
+    it('Price overrides for project 1 owner', async () => {
+        expect(await contractAsPublic1.addMemberPriceOverrides(projectOwner1)).to.equal(0);
+    })
+
+    it('Price overrides for project 2 owner', async () => {
+        expect(await contractAsPublic1.addMemberPriceOverrides(projectOwner2)).to.equal(0);
+    })
+
+    it('Non admin address tries to set addMemberPriceOverrides for projectOwner1', async () => {
+        await expect(contractAsPublic1.setAddMemberPriceOverride(projectOwner1, parseUnits('0.25'))).to.be.revertedWith('not admin');
+    });
+
+    it('Non admin address tries to set addMemberPriceOverrides for projectOwner2', async () => {
+        await expect(contractAsPublic1.setAddMemberPriceOverride(projectOwner2, parseUnits('0.25'))).to.be.revertedWith('not admin');
+    });
+
+    it('Owner address sets addMemberPriceOverrides for projectOwner2', async () => {
+        await expect(contractAsOwner.setAddMemberPriceOverride(projectOwner2, parseUnits('0.25')))
+            .to.emit(contract, 'AddMemberPriceOverrideSet').withArgs(owner, projectOwner2, parseUnits('0.25'));
+    });
+
+    it('Admin1 address sets addMemberPriceOverrides for projectOwner2', async () => {
+        await expect(contractAsAdmin1.setAddMemberPriceOverride(projectOwner2, parseUnits('0.35')))
+            .to.emit(contract, 'AddMemberPriceOverrideSet').withArgs(admin1, projectOwner2, parseUnits('0.35'));
+    });
+
+    it('Admin2 address sets addMemberPriceOverrides for projectOwner2', async () => {
+        await expect(contractAsAdmin2.setAddMemberPriceOverride(projectOwner2, parseUnits('0.45')))
+            .to.emit(contract, 'AddMemberPriceOverrideSet').withArgs(admin2, projectOwner2, parseUnits('0.45'));
     });
 });
 
