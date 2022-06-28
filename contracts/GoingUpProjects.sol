@@ -73,11 +73,59 @@ contract GoingUpProjects {
     /// @notice Number of members that can be added for free (just pay for gas)
     uint256 public freeMembers = 5;
 
+    /// @notice This event is emitted when freeMembers is changed
+    /// @param changedBy Address that changed freeMembers
+    /// @param newFreeMembers New value for freeMembers
+    event FreeMembersChanged(address changedBy, uint256 newFreeMembers);
+
     /// @notice Sets the number of members that can be added for free (accessible only by admins)
     /// @param newFreeMembers New number of members that can be added for free
     function setFreeMembers(uint256 newFreeMembers) public onlyAdmin {
         freeMembers = newFreeMembers;
+        emit FreeMembersChanged(msg.sender, newFreeMembers);
     }
+
+    /// @notice Default price for adding members above the freeMembers threshold (1 MATIC)
+    uint256 public addMemberPrice = 1 ether;
+
+    /// @notice This event is emitted when addMemberPrice is changed
+    /// @param changedBy Address that changed addMemberPrice
+    /// @param newAddMemberPrice New value for addMemberPrice
+    event AddMemberPriceChanged(address changedBy, uint256 newAddMemberPrice);
+
+    /// @notice Sets the default price for adding members (accessible only by admins)
+    /// @param newAddMemberPrice New default price for adding members
+    function setAddMemberPrice(uint256 newAddMemberPrice) public onlyAdmin {
+        addMemberPrice = newAddMemberPrice;
+        emit AddMemberPriceChanged(msg.sender, newAddMemberPrice);
+    }
+
+    /// @notice Override price mapping for adding members
+    mapping(address => uint256) public addMemberPriceOverrides;
+
+    /// @notice This event is emitted when add member price override is set
+    /// @param setBy Address that set the override price
+    /// @param targetAddress Target address to set override price for
+    /// @param overridePrice New override price for adding members
+    event AddMemberPriceOverrideSet(address setBy, address targetAddress, uint256 overridePrice);
+
+    /// @notice Sets the override price for adding members (accessible only by admins)
+    /// @param targetAddress Target address to set override price
+    /// @param overridePrice New override price for adding members
+    function setAddMemberPriceOverride(address targetAddress, uint256 overridePrice) public onlyAdmin {
+        addMemberPriceOverrides[targetAddress] = overridePrice;
+        emit AddMemberPriceOverrideSet(msg.sender, targetAddress, overridePrice);
+    }
+
+    modifier sentEnoughForAddMember {
+        uint256 _price = addMemberPriceOverrides[msg.sender];
+        if (_price == 0) {
+            _price = addMemberPrice;
+        }
+        require(msg.value >= _price, "did not send enough");
+        _;
+    }
+
 
     /// @notice Projects mapping
     mapping(uint256 => Project) public projects;
