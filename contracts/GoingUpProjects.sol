@@ -70,6 +70,15 @@ contract GoingUpProjects {
         price = newPrice;
     }
 
+    /// @notice Number of members that can be added for free (just pay for gas)
+    uint256 public freeMembers = 5;
+
+    /// @notice Sets the number of members that can be added for free (accessible only by admins)
+    /// @param newFreeMembers New number of members that can be added for free
+    function setFreeMembers(uint256 newFreeMembers) public onlyAdmin {
+        freeMembers = newFreeMembers;
+    }
+
     /// @notice Projects mapping
     mapping(uint256 => Project) public projects;
 
