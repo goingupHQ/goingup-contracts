@@ -85,8 +85,8 @@ contract GoingUpProjects {
         emit FreeMembersChanged(msg.sender, newFreeMembers);
     }
 
-    /// @notice Default price for adding members above the freeMembers threshold (1 MATIC)
-    uint256 public addMemberPrice = 1 ether;
+    /// @notice Default price for adding members above the freeMembers threshold (0.1 MATIC)
+    uint256 public addMemberPrice = 0.1 ether;
 
     /// @notice This event is emitted when addMemberPrice is changed
     /// @param changedBy Address that changed addMemberPrice
