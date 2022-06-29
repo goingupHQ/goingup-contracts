@@ -142,18 +142,15 @@ describe('Contract variable "freeMembers"', () => {
     });
 
     it('Owner address sets freeMembers', async () => {
-        await expect(contractAsOwner.setFreeMembers(1))
-            .to.emit(contract, 'FreeMembersChanged').withArgs(owner, 1);
+        await expect(contractAsOwner.setFreeMembers(1)).to.emit(contract, 'FreeMembersChanged').withArgs(owner, 1);
     });
 
     it('Admin1 address sets freeMembers', async () => {
-        await expect(contractAsAdmin1.setFreeMembers(2))
-            .to.emit(contract, 'FreeMembersChanged').withArgs(admin1, 2);
+        await expect(contractAsAdmin1.setFreeMembers(2)).to.emit(contract, 'FreeMembersChanged').withArgs(admin1, 2);
     });
 
     it('Admin2 address sets freeMembers', async () => {
-        await expect(contractAsAdmin2.setFreeMembers(5))
-            .to.emit(contract, 'FreeMembersChanged').withArgs(admin2, 5);
+        await expect(contractAsAdmin2.setFreeMembers(5)).to.emit(contract, 'FreeMembersChanged').withArgs(admin2, 5);
     });
 });
 
@@ -168,50 +165,60 @@ describe('Contract variable "addMemberPrice"', () => {
 
     it('Owner address sets addMemberPrice', async () => {
         await expect(contractAsOwner.setAddMemberPrice(parseUnits('0.25')))
-            .to.emit(contract, 'AddMemberPriceChanged').withArgs(owner, parseUnits('0.25'));
+            .to.emit(contract, 'AddMemberPriceChanged')
+            .withArgs(owner, parseUnits('0.25'));
     });
 
     it('Admin1 address sets addMemberPrice', async () => {
         await expect(contractAsAdmin1.setAddMemberPrice(parseUnits('0.35')))
-            .to.emit(contract, 'AddMemberPriceChanged').withArgs(admin1, parseUnits('0.35'));
+            .to.emit(contract, 'AddMemberPriceChanged')
+            .withArgs(admin1, parseUnits('0.35'));
     });
 
     it('Admin2 address sets addMemberPrice', async () => {
         await expect(contractAsAdmin2.setAddMemberPrice(parseUnits('0.1')))
-            .to.emit(contract, 'AddMemberPriceChanged').withArgs(admin2, parseUnits('0.1'));
+            .to.emit(contract, 'AddMemberPriceChanged')
+            .withArgs(admin2, parseUnits('0.1'));
     });
 });
 
 describe('Contract variable "addMemberPriceOverrides"', () => {
     it('Price overrides for project 1 owner', async () => {
         expect(await contractAsPublic1.addMemberPriceOverrides(projectOwner1)).to.equal(0);
-    })
+    });
 
     it('Price overrides for project 2 owner', async () => {
         expect(await contractAsPublic1.addMemberPriceOverrides(projectOwner2)).to.equal(0);
-    })
+    });
 
     it('Non admin address tries to set addMemberPriceOverrides for projectOwner1', async () => {
-        await expect(contractAsPublic1.setAddMemberPriceOverride(projectOwner1, parseUnits('0.25'))).to.be.revertedWith('not admin');
+        await expect(contractAsPublic1.setAddMemberPriceOverride(projectOwner1, parseUnits('0.25'))).to.be.revertedWith(
+            'not admin'
+        );
     });
 
     it('Non admin address tries to set addMemberPriceOverrides for projectOwner2', async () => {
-        await expect(contractAsPublic1.setAddMemberPriceOverride(projectOwner2, parseUnits('0.25'))).to.be.revertedWith('not admin');
+        await expect(contractAsPublic1.setAddMemberPriceOverride(projectOwner2, parseUnits('0.25'))).to.be.revertedWith(
+            'not admin'
+        );
     });
 
     it('Owner address sets addMemberPriceOverrides for projectOwner2', async () => {
         await expect(contractAsOwner.setAddMemberPriceOverride(projectOwner2, parseUnits('0.25')))
-            .to.emit(contract, 'AddMemberPriceOverrideSet').withArgs(owner, projectOwner2, parseUnits('0.25'));
+            .to.emit(contract, 'AddMemberPriceOverrideSet')
+            .withArgs(owner, projectOwner2, parseUnits('0.25'));
     });
 
     it('Admin1 address sets addMemberPriceOverrides for projectOwner2', async () => {
         await expect(contractAsAdmin1.setAddMemberPriceOverride(projectOwner2, parseUnits('0.35')))
-            .to.emit(contract, 'AddMemberPriceOverrideSet').withArgs(admin1, projectOwner2, parseUnits('0.35'));
+            .to.emit(contract, 'AddMemberPriceOverrideSet')
+            .withArgs(admin1, projectOwner2, parseUnits('0.35'));
     });
 
     it('Admin2 address sets addMemberPriceOverrides for projectOwner2', async () => {
         await expect(contractAsAdmin2.setAddMemberPriceOverride(projectOwner2, parseUnits('0.45')))
-            .to.emit(contract, 'AddMemberPriceOverrideSet').withArgs(admin2, projectOwner2, parseUnits('0.45'));
+            .to.emit(contract, 'AddMemberPriceOverrideSet')
+            .withArgs(admin2, projectOwner2, parseUnits('0.45'));
     });
 });
 
@@ -225,7 +232,8 @@ describe('Create and update projects', () => {
                 data.started,
                 data.ended,
                 data.primaryUrl,
-                data.tags.join()
+                data.tags.join(),
+                data.isPrivate
             )
         ).to.revertedWith('did not send enough');
     });
@@ -240,6 +248,7 @@ describe('Create and update projects', () => {
                 data.ended,
                 data.primaryUrl,
                 data.tags.join(),
+                data.isPrivate,
                 { value: '1000000000000000' }
             )
         ).to.revertedWith('did not send enough');
@@ -248,26 +257,36 @@ describe('Create and update projects', () => {
     it('Project Owners creates their respective projects', async () => {
         const price = await contractAsProjectOwner1.price();
         const data = mockData[0];
-        await expect(contractAsProjectOwner1.create(
-            data.name,
-            data.description,
-            data.started,
-            data.ended,
-            data.primaryUrl,
-            data.tags.join(),
-            { value: price }
-        )).to.emit(contract, 'Create').withArgs(projectOwner1, 1);;
+        await expect(
+            contractAsProjectOwner1.create(
+                data.name,
+                data.description,
+                data.started,
+                data.ended,
+                data.primaryUrl,
+                data.tags.join(),
+                data.isPrivate,
+                { value: price }
+            )
+        )
+            .to.emit(contract, 'Create')
+            .withArgs(projectOwner1, 1);
 
         const data2 = mockData[1];
-        await expect(contractAsProjectOwner2.create(
-            data2.name,
-            data2.description,
-            data2.started,
-            data2.ended,
-            data2.primaryUrl,
-            data2.tags.join(),
-            { value: price }
-        )).to.emit(contract, 'Create').withArgs(projectOwner2, 2);
+        await expect(
+            contractAsProjectOwner2.create(
+                data2.name,
+                data2.description,
+                data2.started,
+                data2.ended,
+                data2.primaryUrl,
+                data2.tags.join(),
+                data2.isPrivate,
+                { value: price }
+            )
+        )
+            .to.emit(contract, 'Create')
+            .withArgs(projectOwner2, 2);
     });
 
     it('Check if projects have been created', async () => {
@@ -311,6 +330,7 @@ describe('Create and update projects', () => {
                 data1.ended,
                 data1.primaryUrl,
                 data1.tags.join(),
+                data1.isPrivate,
                 { value: price }
             )
         ).to.be.revertedWith('cannot edit project');
@@ -325,6 +345,7 @@ describe('Create and update projects', () => {
                 data2.ended,
                 data2.primaryUrl,
                 data2.tags.join(),
+                data2.isPrivate,
                 { value: price }
             )
         ).to.be.revertedWith('cannot edit project');
@@ -333,28 +354,38 @@ describe('Create and update projects', () => {
     it('Project Owners update their respective projects', async () => {
         const price = await contractAsProjectOwner1.price();
         const data1 = mockData[10];
-        await expect(contractAsProjectOwner1.update(
-            1,
-            data1.name,
-            data1.description,
-            data1.started,
-            data1.ended,
-            data1.primaryUrl,
-            data1.tags.join(),
-            { value: price }
-        )).to.emit(contract, 'Update').withArgs(projectOwner1, 1);;
+        await expect(
+            contractAsProjectOwner1.update(
+                1,
+                data1.name,
+                data1.description,
+                data1.started,
+                data1.ended,
+                data1.primaryUrl,
+                data1.tags.join(),
+                data1.isPrivate,
+                { value: price }
+            )
+        )
+            .to.emit(contract, 'Update')
+            .withArgs(projectOwner1, 1);
 
         const data2 = mockData[20];
-        await expect(contractAsProjectOwner2.update(
-            2,
-            data2.name,
-            data2.description,
-            data2.started,
-            data2.ended,
-            data2.primaryUrl,
-            data2.tags.join(),
-            { value: price }
-        )).to.emit(contract, 'Update').withArgs(projectOwner2, 2);;
+        await expect(
+            contractAsProjectOwner2.update(
+                2,
+                data2.name,
+                data2.description,
+                data2.started,
+                data2.ended,
+                data2.primaryUrl,
+                data2.tags.join(),
+                data2.isPrivate,
+                { value: price }
+            )
+        )
+            .to.emit(contract, 'Update')
+            .withArgs(projectOwner2, 2);
     });
 
     it('Check if projects have been updated', async () => {
@@ -384,28 +415,34 @@ describe('Create and update projects', () => {
 describe('Project ownership', () => {
     it('Transfer project ownership but not enough funds sent', async () => {
         const price = await contractAsProjectOwner1.price();
-        await expect(contractAsPublic1.transferProjectOwnership(1, public1, { value: price.sub('100000') }))
-            .to.be.revertedWith('did not send enough');
+        await expect(
+            contractAsPublic1.transferProjectOwnership(1, public1, { value: price.sub('100000') })
+        ).to.be.revertedWith('did not send enough');
 
-        await expect(contractAsPublic1.transferProjectOwnership(2, public1, { value: price.sub('100000') }))
-            .to.be.revertedWith('did not send enough');
+        await expect(
+            contractAsPublic1.transferProjectOwnership(2, public1, { value: price.sub('100000') })
+        ).to.be.revertedWith('did not send enough');
     });
 
     it('Transfer project ownership but not authorized', async () => {
         const price = await contractAsProjectOwner1.price();
-        await expect(contractAsPublic1.transferProjectOwnership(1, public1, { value: price }))
-            .to.be.revertedWith('not the project owner');
+        await expect(contractAsPublic1.transferProjectOwnership(1, public1, { value: price })).to.be.revertedWith(
+            'not the project owner'
+        );
 
-        await expect(contractAsPublic1.transferProjectOwnership(2, public1, { value: price }))
-            .to.be.revertedWith('not the project owner');
+        await expect(contractAsPublic1.transferProjectOwnership(2, public1, { value: price })).to.be.revertedWith(
+            'not the project owner'
+        );
     });
 
     it('Transfer project ownership by respective owners', async () => {
         const price = await contractAsProjectOwner1.price();
         await expect(contractAsProjectOwner1.transferProjectOwnership(1, public1, { value: price }))
-            .to.emit(contract, 'TransferProjectOwnership').withArgs(1, projectOwner1, public1);
+            .to.emit(contract, 'TransferProjectOwnership')
+            .withArgs(1, projectOwner1, public1);
         await expect(contractAsProjectOwner2.transferProjectOwnership(2, public1, { value: price }))
-            .to.emit(contract, 'TransferProjectOwnership').withArgs(2, projectOwner2, public1);
+            .to.emit(contract, 'TransferProjectOwnership')
+            .withArgs(2, projectOwner2, public1);
     });
 
     it('Verify if project owner has changed', async () => {
@@ -414,14 +451,16 @@ describe('Project ownership', () => {
 
         const project2 = await contractAsPublic1.projects(2);
         expect(project2.owner).to.equal(public1);
-    })
+    });
 
     it('Transfer project ownership to original owners', async () => {
         const price = await contractAsProjectOwner1.price();
         await expect(contractAsPublic1.transferProjectOwnership(1, projectOwner1, { value: price }))
-            .to.emit(contract, 'TransferProjectOwnership').withArgs(1, public1, projectOwner1);
+            .to.emit(contract, 'TransferProjectOwnership')
+            .withArgs(1, public1, projectOwner1);
         await expect(contractAsPublic1.transferProjectOwnership(2, projectOwner2, { value: price }))
-            .to.emit(contract, 'TransferProjectOwnership').withArgs(2, public1, projectOwner2);
+            .to.emit(contract, 'TransferProjectOwnership')
+            .withArgs(2, public1, projectOwner2);
     });
 
     it('Verify if project ownership has been returned to original owners', async () => {
@@ -430,16 +469,14 @@ describe('Project ownership', () => {
 
         const project2 = await contractAsPublic1.projects(2);
         expect(project2.owner).to.equal(projectOwner2);
-    })
+    });
 });
 
 describe('Project active/not active state', () => {
     it('Deactivate projects but not authorized', async () => {
-        await expect(contractAsPublic1.deactivate(1))
-            .to.be.revertedWith('not the project owner');
+        await expect(contractAsPublic1.deactivate(1)).to.be.revertedWith('not the project owner');
 
-        await expect(contractAsPublic1.deactivate(2))
-            .to.be.revertedWith('not the project owner');
+        await expect(contractAsPublic1.deactivate(2)).to.be.revertedWith('not the project owner');
     });
 
     it('Deactivate projects by owners', async () => {
@@ -450,41 +487,45 @@ describe('Project active/not active state', () => {
     it('Update deactivated projects', async () => {
         const price = await contractAsProjectOwner1.price();
         const data1 = mockData[11];
-        await expect(contractAsProjectOwner1.update(
-            1,
-            data1.name,
-            data1.description,
-            data1.started,
-            data1.ended,
-            data1.primaryUrl,
-            data1.tags.join(),
-            { value: price }
-        )).to.be.revertedWith('project not active');
+        await expect(
+            contractAsProjectOwner1.update(
+                1,
+                data1.name,
+                data1.description,
+                data1.started,
+                data1.ended,
+                data1.primaryUrl,
+                data1.tags.join(),
+                data1.isPrivate,
+                { value: price }
+            )
+        ).to.be.revertedWith('project not active');
 
         const data2 = mockData[21];
-        await expect(contractAsProjectOwner2.update(
-            2,
-            data2.name,
-            data2.description,
-            data2.started,
-            data2.ended,
-            data2.primaryUrl,
-            data2.tags.join(),
-            { value: price }
-        )).to.be.revertedWith('project not active');
+        await expect(
+            contractAsProjectOwner2.update(
+                2,
+                data2.name,
+                data2.description,
+                data2.started,
+                data2.ended,
+                data2.primaryUrl,
+                data2.tags.join(),
+                data2.isPrivate,
+                { value: price }
+            )
+        ).to.be.revertedWith('project not active');
     });
 
     it('Activate projects but not authorized', async () => {
-        await expect(contractAsPublic1.activate(1))
-            .to.be.revertedWith('not the project owner');
+        await expect(contractAsPublic1.activate(1)).to.be.revertedWith('not the project owner');
 
-        await expect(contractAsPublic1.activate(2))
-            .to.be.revertedWith('not the project owner');
+        await expect(contractAsPublic1.activate(2)).to.be.revertedWith('not the project owner');
     });
 
     it('Activate projects by owners', async () => {
-        await expect(contractAsProjectOwner1.activate(1)).to.emit(contract, 'Activate').withArgs(1, projectOwner1);;
-        await expect(contractAsProjectOwner2.activate(2)).to.emit(contract, 'Activate').withArgs(2, projectOwner2);;
+        await expect(contractAsProjectOwner1.activate(1)).to.emit(contract, 'Activate').withArgs(1, projectOwner1);
+        await expect(contractAsProjectOwner2.activate(2)).to.emit(contract, 'Activate').withArgs(2, projectOwner2);
     });
 
     it('Update activated projects', async () => {
@@ -498,6 +539,7 @@ describe('Project active/not active state', () => {
             data1.ended,
             data1.primaryUrl,
             data1.tags.join(),
+            data1.isPrivate,
             { value: price }
         );
 
@@ -510,24 +552,67 @@ describe('Project active/not active state', () => {
             data2.ended,
             data2.primaryUrl,
             data2.tags.join(),
+            data2.isPrivate,
             { value: price }
         );
     });
 });
 
+describe('Project private/public state', () => {
+    it('Make project private but not authorized', async () => {
+        await expect(contractAsPublic1.setProjectPrivate(1)).to.be.revertedWith('cannot edit project');
+
+        await expect(contractAsPublic1.setProjectPrivate(2)).to.be.revertedWith('cannot edit project');
+    }).timeout(5000);
+
+    it('Set project as private by owners', async () => {
+        await expect(contractAsProjectOwner1.setProjectPrivate(1))
+            .to.emit(contract, 'SetProjectPrivate')
+            .withArgs(1, projectOwner1);
+        await expect(contractAsProjectOwner2.setProjectPrivate(2))
+            .to.emit(contract, 'SetProjectPrivate')
+            .withArgs(2, projectOwner2);
+    });
+
+    it('Verify project isPrivate property', async () => {
+        const project1 = await contractAsPublic1.projects(1);
+        expect(project1.isPrivate).to.equal(true);
+
+        const project2 = await contractAsPublic1.projects(2);
+        expect(project2.isPrivate).to.equal(true);
+    });
+
+    it('Set project as public by owners', async () => {
+        await expect(contractAsProjectOwner1.setProjectPublic(1))
+            .to.emit(contract, 'SetProjectPublic')
+            .withArgs(1, projectOwner1);
+        await expect(contractAsProjectOwner2.setProjectPublic(2))
+            .to.emit(contract, 'SetProjectPublic')
+            .withArgs(2, projectOwner2);
+    });
+
+    it('Verify project isPrivate property', async () => {
+        const project1 = await contractAsPublic1.projects(1);
+        expect(project1.isPrivate).to.equal(false);
+
+        const project2 = await contractAsPublic1.projects(2);
+        expect(project2.isPrivate).to.equal(false);
+    });
+});
+
 describe('Project allow/disallow project members to edit', () => {
     it('Allow members to edit projects but not authorized', async () => {
-        await expect(contractAsPublic1.allowMembersToEdit(1))
-            .to.be.revertedWith('not the project owner');
+        await expect(contractAsPublic1.allowMembersToEdit(1)).to.be.revertedWith('not the project owner');
 
-        await expect(contractAsPublic1.allowMembersToEdit(2))
-            .to.be.revertedWith('not the project owner');
+        await expect(contractAsPublic1.allowMembersToEdit(2)).to.be.revertedWith('not the project owner');
     });
 
     it('Allow members to edit projects by owners', async () => {
-        await expect(contractAsProjectOwner1.allowMembersToEdit(1)).to.emit(contract, 'AllowMembersToEdit')
+        await expect(contractAsProjectOwner1.allowMembersToEdit(1))
+            .to.emit(contract, 'AllowMembersToEdit')
             .withArgs(1, projectOwner1);
-        await expect(contractAsProjectOwner2.allowMembersToEdit(2)).to.emit(contract, 'AllowMembersToEdit')
+        await expect(contractAsProjectOwner2.allowMembersToEdit(2))
+            .to.emit(contract, 'AllowMembersToEdit')
             .withArgs(2, projectOwner2);
 
         const project1 = await contractAsPublic1.projects(1);
@@ -538,18 +623,18 @@ describe('Project allow/disallow project members to edit', () => {
     });
 
     it('Disallow members to edit projects but not authorized', async () => {
-        await expect(contractAsPublic1.disallowMembersToEdit(1))
-            .to.be.revertedWith('not the project owner');
+        await expect(contractAsPublic1.disallowMembersToEdit(1)).to.be.revertedWith('not the project owner');
 
-        await expect(contractAsPublic1.disallowMembersToEdit(2))
-            .to.be.revertedWith('not the project owner');
+        await expect(contractAsPublic1.disallowMembersToEdit(2)).to.be.revertedWith('not the project owner');
     });
 
     it('Disallow members to edit projects by owners', async () => {
-        await expect(contractAsProjectOwner1.disallowMembersToEdit(1)).to.emit(contract, 'DisallowMembersToEdit')
-            .withArgs(1, projectOwner1);;
-        await expect(contractAsProjectOwner2.disallowMembersToEdit(2)).to.emit(contract, 'DisallowMembersToEdit')
-            .withArgs(2, projectOwner2);;
+        await expect(contractAsProjectOwner1.disallowMembersToEdit(1))
+            .to.emit(contract, 'DisallowMembersToEdit')
+            .withArgs(1, projectOwner1);
+        await expect(contractAsProjectOwner2.disallowMembersToEdit(2))
+            .to.emit(contract, 'DisallowMembersToEdit')
+            .withArgs(2, projectOwner2);
 
         const project1 = await contractAsPublic1.projects(1);
         const project2 = await contractAsPublic1.projects(2);
@@ -561,11 +646,9 @@ describe('Project allow/disallow project members to edit', () => {
 
 describe('Project members', () => {
     it('Invite members to project but not authorized', async () => {
-        await expect(contractAsPublic1.inviteMember(1, public1, 'Member'))
-            .to.be.revertedWith('cannot edit project');
+        await expect(contractAsPublic1.inviteMember(1, public1, 'Member')).to.be.revertedWith('cannot edit project');
 
-        await expect(contractAsPublic1.inviteMember(2, public1, 'Member'))
-            .to.be.revertedWith('cannot edit project');
+        await expect(contractAsPublic1.inviteMember(2, public1, 'Member')).to.be.revertedWith('cannot edit project');
     });
 
     it('Invite members to project by owners', async () => {
@@ -601,11 +684,9 @@ describe('Project members', () => {
     });
 
     it('Disinvite members to project but not authorized', async () => {
-        await expect(contractAsPublic1.disinviteMember(1, public1))
-            .to.be.revertedWith('cannot edit project');
+        await expect(contractAsPublic1.disinviteMember(1, public1)).to.be.revertedWith('cannot edit project');
 
-        await expect(contractAsPublic1.disinviteMember(2, public1))
-            .to.be.revertedWith('cannot edit project');
+        await expect(contractAsPublic1.disinviteMember(2, public1)).to.be.revertedWith('cannot edit project');
     });
 
     it('Disinvite members from project by owners', async () => {
@@ -723,12 +804,14 @@ describe('Project members', () => {
     });
 
     it('Project 1 owner invites public 1 address', async () => {
-        await expect(contractAsProjectOwner1.inviteMember(1, public1, 'test')).to.emit(contract, 'InviteMember')
+        await expect(contractAsProjectOwner1.inviteMember(1, public1, 'test'))
+            .to.emit(contract, 'InviteMember')
             .withArgs(1, projectOwner1, public1, 'test');
     });
 
     it('Public 1 accepts project 1 owner invite', async () => {
-        await expect(contractAsPublic1.acceptProjectInvitation(1)).to.emit(contract, 'AcceptProjectInvitation')
+        await expect(contractAsPublic1.acceptProjectInvitation(1))
+            .to.emit(contract, 'AcceptProjectInvitation')
             .withArgs(1, public1);
     });
 
@@ -738,7 +821,8 @@ describe('Project members', () => {
     });
 
     it('Public 1 leaves project', async () => {
-        await expect(contractAsPublic1.leaveProject(1, 'need to leave')).to.emit(contract, 'LeaveProject')
+        await expect(contractAsPublic1.leaveProject(1, 'need to leave'))
+            .to.emit(contract, 'LeaveProject')
             .withArgs(1, public1, 'need to leave');
     });
 
@@ -748,26 +832,33 @@ describe('Project members', () => {
     });
 
     it('Project 1 owner leaves project (should revert)', async () => {
-        await expect(contractAsProjectOwner1.leaveProject(1, 'no reason')).to.be.revertedWith('owner cannot leave project');
+        await expect(contractAsProjectOwner1.leaveProject(1, 'no reason')).to.be.revertedWith(
+            'owner cannot leave project'
+        );
     });
 
     it('Non-member leaves project (should revert)', async () => {
-        await expect(contractAsProject2Member1.leaveProject(1, 'no reason')).to.be.revertedWith('not a member of project');
+        await expect(contractAsProject2Member1.leaveProject(1, 'no reason')).to.be.revertedWith(
+            'not a member of project'
+        );
     });
 
     it('Project 1 owner invites public 1 address', async () => {
-        await expect(contractAsProjectOwner1.inviteMember(1, public1, 'test')).to.emit(contract, 'InviteMember')
+        await expect(contractAsProjectOwner1.inviteMember(1, public1, 'test'))
+            .to.emit(contract, 'InviteMember')
             .withArgs(1, projectOwner1, public1, 'test');
     });
 
     it('Public 1 accepts project 1 owner invite', async () => {
-        await expect(contractAsPublic1.acceptProjectInvitation(1)).to.emit(contract, 'AcceptProjectInvitation')
+        await expect(contractAsPublic1.acceptProjectInvitation(1))
+            .to.emit(contract, 'AcceptProjectInvitation')
             .withArgs(1, public1);
     });
 
     it('Unauthorized address removes project member', async () => {
-        await expect(contractAsPublic1.removeMember(1, project1Member1, 'testing remove function'))
-            .to.be.revertedWith('cannot edit project');
+        await expect(contractAsPublic1.removeMember(1, project1Member1, 'testing remove function')).to.be.revertedWith(
+            'cannot edit project'
+        );
     });
 
     it('Project 1 owner removes project member', async () => {
@@ -777,8 +868,9 @@ describe('Project members', () => {
     });
 
     it('Change project1 member1 role by unauthorize address', async () => {
-        await expect(contractAsProject1Member1.changeMemberRole(1, project1Member1, 'Associate'))
-            .to.be.revertedWith('cannot edit project');
+        await expect(contractAsProject1Member1.changeMemberRole(1, project1Member1, 'Associate')).to.be.revertedWith(
+            'cannot edit project'
+        );
     });
 
     it('Change project1 member1 role by project owner', async () => {
@@ -794,8 +886,9 @@ describe('Project members', () => {
 
 describe('Extra data', () => {
     it('Set extra project data by unauthorized address', async () => {
-        await expect(contractAsPublic1.setProjectExtraData(1, 'test', 'test'))
-            .to.be.revertedWith('cannot edit project');
+        await expect(contractAsPublic1.setProjectExtraData(1, 'test', 'test')).to.be.revertedWith(
+            'cannot edit project'
+        );
     });
 
     it('Set extra project data by project owner', async () => {
@@ -811,70 +904,82 @@ describe('Extra data', () => {
 
 describe('Project score/comment', () => {
     it('Submit score without sending fee', async () => {
-        await expect(contractAsPublic1.submitProjectReview(1, 0, 'normal score'))
-            .to.be.revertedWith('did not send enough');
+        await expect(contractAsPublic1.submitProjectReview(1, 0, 'normal score')).to.be.revertedWith(
+            'did not send enough'
+        );
     });
 
     it('Submit score but not enough amount sent', async () => {
-        await expect(contractAsPublic1.submitProjectReview(1, 0, 'normal score', { value: 1 }))
-            .to.be.revertedWith('did not send enough');
+        await expect(contractAsPublic1.submitProjectReview(1, 0, 'normal score', { value: 1 })).to.be.revertedWith(
+            'did not send enough'
+        );
     });
 
     it('Submit project score less than -5', async () => {
         const price = await contractAsPublic1.price();
-        await expect(contractAsPublic1
-            .submitProjectReview(1, -6, 'not a good project but not bad either', { value: price }))
-            .to.be.revertedWith('score must be between -5 and +5');
-        await expect(contractAsPublic1
-            .submitProjectReview(1, -12, 'not a good project but not bad either', { value: price }))
-            .to.be.revertedWith('score must be between -5 and +5');
-        await expect(contractAsPublic1
-            .submitProjectReview(1, -56, 'not a good project but not bad either', { value: price }))
-            .to.be.revertedWith('score must be between -5 and +5');
+        await expect(
+            contractAsPublic1.submitProjectReview(1, -6, 'not a good project but not bad either', { value: price })
+        ).to.be.revertedWith('score must be between -5 and +5');
+        await expect(
+            contractAsPublic1.submitProjectReview(1, -12, 'not a good project but not bad either', { value: price })
+        ).to.be.revertedWith('score must be between -5 and +5');
+        await expect(
+            contractAsPublic1.submitProjectReview(1, -56, 'not a good project but not bad either', { value: price })
+        ).to.be.revertedWith('score must be between -5 and +5');
     });
 
     it('Submit project score greater than 5', async () => {
         const price = await contractAsPublic1.price();
-        await expect(contractAsPublic1
-            .submitProjectReview(1, 6, 'not a good project but not bad either', { value: price }))
-            .to.be.revertedWith('score must be between -5 and +5');
-        await expect(contractAsPublic1
-            .submitProjectReview(1, 12, 'not a good project but not bad either', { value: price }))
-            .to.be.revertedWith('score must be between -5 and +5');
-        await expect(contractAsPublic1
-            .submitProjectReview(1, 56, 'not a good project but not bad either', { value: price }))
-            .to.be.revertedWith('score must be between -5 and +5');
+        await expect(
+            contractAsPublic1.submitProjectReview(1, 6, 'not a good project but not bad either', { value: price })
+        ).to.be.revertedWith('score must be between -5 and +5');
+        await expect(
+            contractAsPublic1.submitProjectReview(1, 12, 'not a good project but not bad either', { value: price })
+        ).to.be.revertedWith('score must be between -5 and +5');
+        await expect(
+            contractAsPublic1.submitProjectReview(1, 56, 'not a good project but not bad either', { value: price })
+        ).to.be.revertedWith('score must be between -5 and +5');
     });
 
     it('Submit project scores/comments', async () => {
         const price = await contractAsPublic1.price();
-        await expect(contractAsProject2Member1
-            .submitProjectReview(1, 0, 'not a good project but not bad either', { value: price }))
+        await expect(
+            contractAsProject2Member1.submitProjectReview(1, 0, 'not a good project but not bad either', {
+                value: price,
+            })
+        )
             .to.emit(contract, 'SubmitProjectReview')
             .withArgs(1, project2Member1, 0, 'not a good project but not bad either');
 
-        await expect(contractAsProject2Member2
-            .submitProjectReview(1, 5, 'this is an awesome project', { value: price }))
+        await expect(
+            contractAsProject2Member2.submitProjectReview(1, 5, 'this is an awesome project', { value: price })
+        )
             .to.emit(contract, 'SubmitProjectReview')
             .withArgs(1, project2Member2, 5, 'this is an awesome project');
 
-        await expect(contractAsProject2Member3
-            .submitProjectReview(1, -5, 'this is a terrible project', { value: price }))
+        await expect(
+            contractAsProject2Member3.submitProjectReview(1, -5, 'this is a terrible project', { value: price })
+        )
             .to.emit(contract, 'SubmitProjectReview')
             .withArgs(1, project2Member3, -5, 'this is a terrible project');
 
-        await expect(contractAsProject1Member1
-            .submitProjectReview(2, 0, 'not a good project but not bad either', { value: price }))
+        await expect(
+            contractAsProject1Member1.submitProjectReview(2, 0, 'not a good project but not bad either', {
+                value: price,
+            })
+        )
             .to.emit(contract, 'SubmitProjectReview')
             .withArgs(2, project1Member1, 0, 'not a good project but not bad either');
 
-        await expect(contractAsProject1Member2
-            .submitProjectReview(2, 5, 'this is an awesome project', { value: price }))
+        await expect(
+            contractAsProject1Member2.submitProjectReview(2, 5, 'this is an awesome project', { value: price })
+        )
             .to.emit(contract, 'SubmitProjectReview')
             .withArgs(2, project1Member2, 5, 'this is an awesome project');
 
-        await expect(contractAsProject1Member3
-            .submitProjectReview(2, -5, 'this is a terrible project', { value: price }))
+        await expect(
+            contractAsProject1Member3.submitProjectReview(2, -5, 'this is a terrible project', { value: price })
+        )
             .to.emit(contract, 'SubmitProjectReview')
             .withArgs(2, project1Member3, -5, 'this is a terrible project');
     });

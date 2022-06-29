@@ -20,6 +20,7 @@ contract GoingUpProjects {
         address owner;
         bool active;
         bool allowMembersToEdit;
+        bool isPrivate;
     }
 
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -167,7 +168,7 @@ contract GoingUpProjects {
     /// @param ended Project ended (Unix timestamp, set to zero if you do not want to set any value)
     /// @param primaryUrl Project primary url
     /// @param tags Project tags
-    function create(string memory name, string memory description, uint started, uint ended, string memory primaryUrl, string memory tags) public payable sentEnough {
+    function create(string memory name, string memory description, uint started, uint ended, string memory primaryUrl, string memory tags, bool isPrivate) public payable sentEnough {
         Project memory newProject;
 
         newProject.id = idCounter;
@@ -177,6 +178,7 @@ contract GoingUpProjects {
         newProject.ended = ended;
         newProject.primaryUrl = primaryUrl;
         newProject.tags = tags;
+        newProject.isPrivate = isPrivate;
         newProject.owner = msg.sender;
         newProject.active = true;
         newProject.allowMembersToEdit = false;
@@ -200,13 +202,14 @@ contract GoingUpProjects {
     /// @param ended Project ended (Unix timestamp, set to zero if you do not want to set any value)
     /// @param primaryUrl Project primary url
     /// @param tags Project tags
-    function update(uint256 projectId, string memory name, string memory description, uint started, uint ended, string memory primaryUrl, string memory tags) public payable sentEnough canEditProject(projectId) isProjectActive(projectId) {
+    function update(uint256 projectId, string memory name, string memory description, uint started, uint ended, string memory primaryUrl, string memory tags, bool isPrivate) public payable sentEnough canEditProject(projectId) isProjectActive(projectId) {
         projects[projectId].name = name;
         projects[projectId].description = description;
         projects[projectId].started = started;
         projects[projectId].ended = ended;
         projects[projectId].primaryUrl = primaryUrl;
         projects[projectId].tags = tags;
+        projects[projectId].isPrivate = isPrivate;
 
         emit Update(msg.sender, projectId);
     }
@@ -247,6 +250,30 @@ contract GoingUpProjects {
     function activate(uint projectId) public onlyProjectOwner(projectId) {
         projects[projectId].active = true;
         emit Activate(projectId, msg.sender);
+    }
+
+    /// @notice This event is emitted when project is set to private
+    /// @param projectId Project ID
+    /// @param setBy Address that set the project to private
+    event SetProjectPrivate(uint indexed projectId, address setBy);
+
+    /// @notice Set project to private (only accessible to authorized addresses)
+    /// @param projectId Project ID
+    function setProjectPrivate(uint projectId) public canEditProject(projectId) {
+        projects[projectId].isPrivate = true;
+        emit SetProjectPrivate(projectId, msg.sender);
+    }
+
+    /// @notice This event is emitted when project is set to public
+    /// @param projectId Project ID
+    /// @param setBy Address that set the project to public
+    event SetProjectPublic(uint indexed projectId, address setBy);
+
+    /// @notice Set project to public (only accessible to authorized addresses)
+    /// @param projectId Project ID
+    function setProjectPublic(uint projectId) public canEditProject(projectId) {
+        projects[projectId].isPrivate = false;
+        emit SetProjectPublic(projectId, msg.sender);
     }
 
     /// @notice This event is emitted when project owner allows members to edit project
