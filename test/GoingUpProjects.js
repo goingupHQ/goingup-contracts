@@ -32,6 +32,9 @@ let deployer,
     project2Member2,
     project2Member3;
 
+let project1ExtraMembers = [];
+let project2ExtraMembers = [];
+
 describe('Initialize', () => {
     it('Deploy GoingUpProjects Contract', async () => {
         const signers = await ethers.getSigners();
@@ -68,6 +71,20 @@ describe('Initialize', () => {
             contractAsProject2Member2,
             contractAsProject2Member3,
         ] = (await ethers.getSigners()).map((signer) => contract.connect(signer));
+
+        for (let i = 100; i < 119; i++) {
+            project1ExtraMembers.push({
+                address: await signers[i].getAddress(),
+                contract: contract.connect(signers[i])
+            });
+        }
+
+        for (let i = 120; i < 139; i++) {
+            project2ExtraMembers.push({
+                address: await signers[i].getAddress(),
+                contract: contract.connect(signers[i])
+            });
+        }
     });
 });
 
@@ -674,13 +691,13 @@ describe('Project members', () => {
     });
 
     it('Verify invites mapping', async () => {
-        expect(await contractAsPublic1.invitesMapping(1, project1Member1)).to.equal(true);
-        expect(await contractAsPublic1.invitesMapping(1, project1Member2)).to.equal(true);
-        expect(await contractAsPublic1.invitesMapping(1, project1Member3)).to.equal(true);
+        expect(await contractAsPublic1.isAddressInvitedToProject(1, project1Member1)).to.equal(true);
+        expect(await contractAsPublic1.isAddressInvitedToProject(1, project1Member2)).to.equal(true);
+        expect(await contractAsPublic1.isAddressInvitedToProject(1, project1Member3)).to.equal(true);
 
-        expect(await contractAsPublic1.invitesMapping(2, project2Member1)).to.equal(true);
-        expect(await contractAsPublic1.invitesMapping(2, project2Member2)).to.equal(true);
-        expect(await contractAsPublic1.invitesMapping(2, project2Member3)).to.equal(true);
+        expect(await contractAsPublic1.isAddressInvitedToProject(2, project2Member1)).to.equal(true);
+        expect(await contractAsPublic1.isAddressInvitedToProject(2, project2Member2)).to.equal(true);
+        expect(await contractAsPublic1.isAddressInvitedToProject(2, project2Member3)).to.equal(true);
     });
 
     it('Disinvite members to project but not authorized', async () => {
@@ -712,13 +729,13 @@ describe('Project members', () => {
     });
 
     it('Verify invites mapping after disinvites', async () => {
-        expect(await contractAsPublic1.invitesMapping(1, project1Member1)).to.equal(false);
-        expect(await contractAsPublic1.invitesMapping(1, project1Member2)).to.equal(false);
-        expect(await contractAsPublic1.invitesMapping(1, project1Member3)).to.equal(false);
+        expect(await contractAsPublic1.isAddressInvitedToProject(1, project1Member1)).to.equal(false);
+        expect(await contractAsPublic1.isAddressInvitedToProject(1, project1Member2)).to.equal(false);
+        expect(await contractAsPublic1.isAddressInvitedToProject(1, project1Member3)).to.equal(false);
 
-        expect(await contractAsPublic1.invitesMapping(2, project2Member1)).to.equal(false);
-        expect(await contractAsPublic1.invitesMapping(2, project2Member2)).to.equal(false);
-        expect(await contractAsPublic1.invitesMapping(2, project2Member3)).to.equal(false);
+        expect(await contractAsPublic1.isAddressInvitedToProject(2, project2Member1)).to.equal(false);
+        expect(await contractAsPublic1.isAddressInvitedToProject(2, project2Member2)).to.equal(false);
+        expect(await contractAsPublic1.isAddressInvitedToProject(2, project2Member3)).to.equal(false);
     });
 
     it('Re-invite members to project by owners', async () => {
@@ -783,9 +800,9 @@ describe('Project members', () => {
 
     it('Get project 1 member roles and validate values', async () => {
         const role = 'Member';
-        const member1 = await contractAsPublic1.memberRolesMapping(1, project1Member1);
-        const member2 = await contractAsPublic1.memberRolesMapping(1, project1Member2);
-        const member3 = await contractAsPublic1.memberRolesMapping(1, project1Member3);
+        const member1 = (await contractAsPublic1.projectMemberMapping(1, project1Member1)).role;
+        const member2 = (await contractAsPublic1.projectMemberMapping(1, project1Member2)).role;
+        const member3 = (await contractAsPublic1.projectMemberMapping(1, project1Member3)).role;
 
         expect(member1).to.equal(role);
         expect(member2).to.equal(role);
@@ -794,9 +811,9 @@ describe('Project members', () => {
 
     it('Get project 2 member roles and validate values', async () => {
         const role = 'Associate';
-        const member1 = await contractAsPublic1.memberRolesMapping(2, project2Member1);
-        const member2 = await contractAsPublic1.memberRolesMapping(2, project2Member2);
-        const member3 = await contractAsPublic1.memberRolesMapping(2, project2Member3);
+        const member1 = (await contractAsPublic1.projectMemberMapping(2, project2Member1)).role;
+        const member2 = (await contractAsPublic1.projectMemberMapping(2, project2Member2)).role;
+        const member3 = (await contractAsPublic1.projectMemberMapping(2, project2Member3)).role;
 
         expect(member1).to.equal(role);
         expect(member2).to.equal(role);
@@ -880,7 +897,7 @@ describe('Project members', () => {
     });
 
     it('Verify project1 member1 role has changed', async () => {
-        expect(await contract.memberRolesMapping(1, project1Member1)).to.equal('Associate');
+        expect((await contract.projectMemberMapping(1, project1Member1)).role).to.equal('Associate');
     });
 });
 
@@ -982,5 +999,121 @@ describe('Project score/comment', () => {
         )
             .to.emit(contract, 'SubmitProjectReview')
             .withArgs(2, project1Member3, -5, 'this is a terrible project');
+    });
+});
+
+describe('Batch invite members and invite member fees', () => {
+    it('Invite members to project 1 by unauthorized address', async () => {
+        await expect(contractAsPublic1.inviteMembers(1, [project1Member1, project1Member2], ['Extra1', 'Extra2'])).to.be.revertedWith(
+            'cannot edit project'
+        );
+    });
+
+    it('Invite members to project 2 by unauthorized address', async () => {
+        await expect(contractAsPublic1.inviteMembers(2, [project2Member1, project2Member2], ['Extra1', 'Extra2'])).to.be.revertedWith(
+            'cannot edit project'
+        );
+    });
+
+    it('Project 1 Owner batch invites members to project 1 without sending fee', async () => {
+        const membersToInvite = project1ExtraMembers.map(member => member.address);
+        const roles = [];
+        for (let i = 0; i < membersToInvite.length; i++) roles.push(`P1 Extra ${i + 1}`);
+        await expect(contractAsProjectOwner1.inviteMembers(1, membersToInvite, roles)).to.be.revertedWith(
+            'did not send enough'
+        );
+    });
+
+    it('Project 2 Owner batch invites members to project 2 without sending fee', async () => {
+        const membersToInvite = project2ExtraMembers.map(member => member.address);
+        const roles = [];
+        for (let i = 0; i < membersToInvite.length; i++) roles.push(`P2 Extra ${i + 1}`);
+        await expect(contractAsProjectOwner2.inviteMembers(2, membersToInvite, roles)).to.be.revertedWith(
+            'did not send enough'
+        );
+    });
+
+    it('Project 1 Owner batch invites members to project 1 but did not send enough', async () => {
+        const membersToInvite = project1ExtraMembers.map(member => member.address);
+        const roles = [];
+        for (let i = 0; i < membersToInvite.length; i++) roles.push(`P1 Extra ${i + 1}`);
+        await expect(contractAsProjectOwner1.inviteMembers(1, membersToInvite, roles, { value: 200 })).to.be.revertedWith(
+            'did not send enough'
+        );
+    });
+
+    it('Project 2 Owner batch invites members to project 2 but did not send enough', async () => {
+        const membersToInvite = project2ExtraMembers.map(member => member.address);
+        const roles = [];
+        for (let i = 0; i < membersToInvite.length; i++) roles.push(`P2 Extra ${i + 1}`);
+        await expect(contractAsProjectOwner2.inviteMembers(2, membersToInvite, roles, { value: 200 })).to.be.revertedWith(
+            'did not send enough'
+        );
+    });
+
+    it('Project 1 Owner batch invites members to project 1 and send 1 ETH (reverts)', async () => {
+        const membersToInvite = project1ExtraMembers.map(member => member.address);
+        const roles = [];
+        for (let i = 0; i < membersToInvite.length; i++) roles.push(`P1 Extra ${i + 1}`);
+        await expect(contractAsProjectOwner1.inviteMembers(1, membersToInvite, roles, { value: parseUnits('1') })).to.be.revertedWith(
+            'did not send enough'
+        );
+    });
+
+    it('Project 2 Owner batch invites members to project 2 and send 1 ETH (reverts)', async () => {
+        const membersToInvite = project2ExtraMembers.map(member => member.address);
+        const roles = [];
+        for (let i = 0; i < membersToInvite.length; i++) roles.push(`P2 Extra ${i + 1}`);
+        await expect(contractAsProjectOwner2.inviteMembers(2, membersToInvite, roles, { value: parseUnits('1') })).to.be.revertedWith(
+            'did not send enough'
+        );
+    });
+
+    it('Project 1 Owner batch invites members to project 1 and send 2 ETH', async () => {
+        const membersToInvite = project1ExtraMembers.map(member => member.address);
+        const roles = [];
+        for (let i = 0; i < membersToInvite.length; i++) roles.push(`P1 Extra ${i + 1}`);
+        await expect(contractAsProjectOwner1.inviteMembers(1, membersToInvite, roles, { value: parseUnits('2') }))
+            .to.emit(contract, 'InviteMember').withArgs(1, projectOwner1, membersToInvite[0], roles[0]);
+    });
+
+    it('Project 2 Owner batch invites members to project 2 and send 9 ETH', async () => {
+        const membersToInvite = project2ExtraMembers.map(member => member.address);
+        const roles = [];
+        for (let i = 0; i < membersToInvite.length; i++) roles.push(`P2 Extra ${i + 1}`);
+        await expect(contractAsProjectOwner2.inviteMembers(2, membersToInvite, roles, { value: parseUnits('9') }))
+            .to.emit(contract, 'InviteMember').withArgs(2, projectOwner2, membersToInvite[0], roles[0]);
+    });
+
+    it('Project 1 Owner batch invites over 20 members to project 1 and send 4 ETH (reverts)', async () => {
+        const combinedMembers = [...project1ExtraMembers, ...project2ExtraMembers];
+        const membersToInvite = combinedMembers.map(member => member.address);
+        const roles = [];
+        for (let i = 0; i < membersToInvite.length; i++) roles.push(`P1 Extra ${i + 1}`);
+        await expect(contractAsProjectOwner1.inviteMembers(1, membersToInvite, roles, { value: parseUnits('4') }))
+            .to.be.revertedWith('maximum of 20 members per transaction');
+    });
+
+    it('Project 2 Owner batch invites over 20 members to project 2 and send 18 ETH (reverts)', async () => {
+        const combinedMembers = [...project1ExtraMembers, ...project2ExtraMembers];
+        const membersToInvite = combinedMembers.map(member => member.address);
+        const roles = [];
+        for (let i = 0; i < membersToInvite.length; i++) roles.push(`P2 Extra ${i + 1}`);
+        await expect(contractAsProjectOwner2.inviteMembers(2, membersToInvite, roles, { value: parseUnits('18') }))
+            .to.be.revertedWith('maximum of 20 members per transaction');
+    });
+
+    it('Project 1 Owner batch invites members with 0 roles to project 1 and send 2 ETH (revert)', async () => {
+        const membersToInvite = project1ExtraMembers.map(member => member.address);
+        const roles = [];
+        await expect(contractAsProjectOwner1.inviteMembers(1, membersToInvite, roles, { value: parseUnits('2') }))
+            .to.be.revertedWith('number of addresses and roles must match');
+    });
+
+    it('Project 2 Owner batch invites members with 0 roles to project 2 and send 9 ETH (revert)', async () => {
+        const membersToInvite = project2ExtraMembers.map(member => member.address);
+        const roles = [];
+        await expect(contractAsProjectOwner2.inviteMembers(2, membersToInvite, roles, { value: parseUnits('9') }))
+            .to.be.revertedWith('number of addresses and roles must match');
     });
 });

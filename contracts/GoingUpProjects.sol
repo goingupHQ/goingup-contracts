@@ -23,6 +23,11 @@ contract GoingUpProjects {
         bool isPrivate;
     }
 
+    struct ProjectMember {
+        string role;
+        string goal;
+    }
+
     using EnumerableSet for EnumerableSet.AddressSet;
 
     constructor () {
@@ -118,13 +123,18 @@ contract GoingUpProjects {
         emit AddMemberPriceOverrideSet(msg.sender, targetAddress, overridePrice);
     }
 
-    modifier sentEnoughForAddMember {
+    modifier sentEnoughForAddMembers(uint256 projectId, uint256 count) {
         uint256 _price = addMemberPriceOverrides[msg.sender];
         if (_price == 0) {
             _price = addMemberPrice;
         }
-        require(msg.value >= _price, "did not send enough");
-        _;
+
+        if (invitesMapping[projectId].length() + membersMapping[projectId].length() + count > freeMembers) {
+            require(msg.value >= _price * (count), "did not send enough");
+            _;
+        } else {
+            _;
+        }
     }
 
 
@@ -132,10 +142,10 @@ contract GoingUpProjects {
     mapping(uint256 => Project) public projects;
 
     mapping(uint256 => EnumerableSet.AddressSet) private membersMapping;
-    mapping(uint256 => mapping(address => string)) public memberRolesMapping;
+    mapping(uint256 => mapping(address => ProjectMember)) public projectMemberMapping;
 
     /// @notice Project invites array
-    mapping(uint256 => mapping(address => bool)) public invitesMapping;
+    mapping(uint256 => EnumerableSet.AddressSet) private invitesMapping;
 
     /// @notice Project extra data storage
     mapping(uint256 => mapping(string => string)) public extraData;
@@ -310,10 +320,24 @@ contract GoingUpProjects {
     /// @notice Invite a member to project
     /// @param projectId Project ID
     /// @param member Address to invite to become a member of the project
-    function inviteMember(uint256 projectId, address member, string memory role) public canEditProject(projectId) {
-        invitesMapping[projectId][member] = true;
-        memberRolesMapping[projectId][member] = role;
+    function inviteMember(uint256 projectId, address member, string memory role) public payable canEditProject(projectId) sentEnoughForAddMembers(projectId, 1) {
+        invitesMapping[projectId].add(member);
+        projectMemberMapping[projectId][member].role = role;
         emit InviteMember(projectId, msg.sender, member, role);
+    }
+
+    /// @notice Invite members to project (max of 20 members per transaction)
+    /// @param projectId Project ID
+    /// @param addresses Member addresses to invite to become members of the project
+    /// @param roles Member roles in project
+    function inviteMembers(uint256 projectId, address[] memory addresses, string[] memory roles) public payable canEditProject(projectId) sentEnoughForAddMembers(projectId, addresses.length) {
+        require(addresses.length <= 20, "maximum of 20 members per transaction");
+        require(addresses.length == roles.length, "number of addresses and roles must match");
+        for (uint i = 0; i < addresses.length; i++) {
+            invitesMapping[projectId].add(addresses[i]);
+            projectMemberMapping[projectId][addresses[i]].role = roles[i];
+            emit InviteMember(projectId, msg.sender, addresses[i], roles[i]);
+        }
     }
 
     /// @notice This event is emitted when an authorized address disinvites a pending invite
@@ -326,9 +350,22 @@ contract GoingUpProjects {
     /// @param projectId Project ID
     /// @param member Address to disinvite from project
     function disinviteMember(uint256 projectId, address member) public canEditProject(projectId) {
-        invitesMapping[projectId][member] = false;
-        memberRolesMapping[projectId][member] = "";
+        invitesMapping[projectId].remove(member);
+        projectMemberMapping[projectId][member].role = "";
         emit DisinviteMember(projectId, msg.sender, member);
+    }
+
+    /// @notice isAddressInvitedToProject returns true if address is invited to project
+    /// @param projectId Project ID
+    /// @param addressToCheck Address to check if invited to project
+    function isAddressInvitedToProject(uint256 projectId, address addressToCheck) public view returns (bool) {
+        return invitesMapping[projectId].contains(addressToCheck);
+    }
+
+    /// @notice Get pending invites for project
+    /// @param projectId Project ID
+    function getPendingInvites(uint256 projectId) public view returns (address[] memory) {
+        return invitesMapping[projectId].values();
     }
 
     /// @notice This event is emitted when a member address accepts invitation to be a project member
@@ -338,7 +375,8 @@ contract GoingUpProjects {
     /// @notice Accept invitation to become a member of the project
     /// @param projectId Project ID
     function acceptProjectInvitation(uint256 projectId) public {
-        require(invitesMapping[projectId][msg.sender], "not invited to project");
+        require(invitesMapping[projectId].contains(msg.sender), "not invited to project");
+        invitesMapping[projectId].remove(msg.sender);
         membersMapping[projectId].add(msg.sender);
         emit AcceptProjectInvitation(projectId, msg.sender);
     }
@@ -355,7 +393,7 @@ contract GoingUpProjects {
         require(projects[projectId].owner != msg.sender, "owner cannot leave project");
         require(membersMapping[projectId].contains(msg.sender), "not a member of project");
         membersMapping[projectId].remove(msg.sender);
-        memberRolesMapping[projectId][msg.sender] = "";
+        projectMemberMapping[projectId][msg.sender].role = "";
         emit LeaveProject(projectId, msg.sender, reason);
     }
 
@@ -373,7 +411,7 @@ contract GoingUpProjects {
     function removeMember(uint256 projectId, address member, string memory reason) public canEditProject(projectId) {
         require(membersMapping[projectId].contains(member), "cannot remove a non-member");
         membersMapping[projectId].remove(member);
-        memberRolesMapping[projectId][member] = "";
+        projectMemberMapping[projectId][member].role = "";
         emit RemoveMember(projectId, msg.sender, member, reason);
     }
 
@@ -389,7 +427,7 @@ contract GoingUpProjects {
     /// @param newRole New role in project
     function changeMemberRole(uint256 projectId, address member, string memory newRole) public canEditProject(projectId) {
         require(membersMapping[projectId].contains(member), "cannot change role of non-member");
-        memberRolesMapping[projectId][member] = newRole;
+        projectMemberMapping[projectId][member].role = newRole;
         emit ChangeMemberRole(projectId, msg.sender, member, newRole);
     }
 
