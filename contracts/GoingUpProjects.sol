@@ -374,10 +374,11 @@ contract GoingUpProjects {
 
     /// @notice Accept invitation to become a member of the project
     /// @param projectId Project ID
-    function acceptProjectInvitation(uint256 projectId) public {
+    function acceptProjectInvitation(uint256 projectId, string memory goal) public {
         require(invitesMapping[projectId].contains(msg.sender), "not invited to project");
         invitesMapping[projectId].remove(msg.sender);
         membersMapping[projectId].add(msg.sender);
+        projectMemberMapping[projectId][msg.sender].goal = goal;
         emit AcceptProjectInvitation(projectId, msg.sender);
     }
 
@@ -435,6 +436,24 @@ contract GoingUpProjects {
     /// @param projectId Project ID
     function getProjectMembers(uint256 projectId) public view returns (address[] memory) {
         return membersMapping[projectId].values();
+    }
+
+    /// @notice This event is emitted when an contract owner or admin manually adds project members
+    /// @param projectId Project ID
+    /// @param addedBy Address who adds the project member
+    /// @param member Member address added to project
+    event ManuallyAddMember(uint256 indexed projectId, address addedBy, address member);
+
+    /// @notice Manually add member to project (only accessible to contract owner or admin)
+    /// @param projectId Project ID
+    /// @param member Member address to add to project
+    /// @param role Role in project
+    /// @param goal Goal for project member
+    function manuallyAddMember(uint256 projectId, address member, string memory role, string memory goal) public onlyAdmin {
+        membersMapping[projectId].add(member);
+        projectMemberMapping[projectId][member].role = role;
+        projectMemberMapping[projectId][member].goal = goal;
+        emit ManuallyAddMember(projectId, msg.sender, member);
     }
 
     /// @notice This event is emitted when an authorized address sets project extra data
