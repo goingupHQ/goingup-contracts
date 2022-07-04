@@ -315,28 +315,31 @@ contract GoingUpProjects {
     /// @param from Authorized address issuing the invitation
     /// @param to Address invited to become a member of the project
     /// @param role Member role in project
-    event InviteMember(uint256 indexed projectId, address from, address to, string role);
+    event InviteMember(uint256 indexed projectId, address from, address to, string role, string goal);
 
     /// @notice Invite a member to project
     /// @param projectId Project ID
     /// @param member Address to invite to become a member of the project
-    function inviteMember(uint256 projectId, address member, string memory role) public payable canEditProject(projectId) sentEnoughForAddMembers(projectId, 1) {
+    function inviteMember(uint256 projectId, address member, string memory role, string memory goal) public payable canEditProject(projectId) sentEnoughForAddMembers(projectId, 1) {
         invitesMapping[projectId].add(member);
         projectMemberMapping[projectId][member].role = role;
-        emit InviteMember(projectId, msg.sender, member, role);
+        projectMemberMapping[projectId][member].goal = goal;
+        emit InviteMember(projectId, msg.sender, member, role, goal);
     }
 
     /// @notice Invite members to project (max of 20 members per transaction)
     /// @param projectId Project ID
     /// @param addresses Member addresses to invite to become members of the project
     /// @param roles Member roles in project
-    function inviteMembers(uint256 projectId, address[] memory addresses, string[] memory roles) public payable canEditProject(projectId) sentEnoughForAddMembers(projectId, addresses.length) {
+    function inviteMembers(uint256 projectId, address[] memory addresses, string[] memory roles, string[] memory goals) public payable canEditProject(projectId) sentEnoughForAddMembers(projectId, addresses.length) {
         require(addresses.length <= 20, "maximum of 20 members per transaction");
         require(addresses.length == roles.length, "number of addresses and roles must match");
+        require(addresses.length == goals.length, "number of addresses and goals must match");
         for (uint i = 0; i < addresses.length; i++) {
             invitesMapping[projectId].add(addresses[i]);
             projectMemberMapping[projectId][addresses[i]].role = roles[i];
-            emit InviteMember(projectId, msg.sender, addresses[i], roles[i]);
+            projectMemberMapping[projectId][addresses[i]].goal = goals[i];
+            emit InviteMember(projectId, msg.sender, addresses[i], roles[i], goals[i]);
         }
     }
 
@@ -374,11 +377,10 @@ contract GoingUpProjects {
 
     /// @notice Accept invitation to become a member of the project
     /// @param projectId Project ID
-    function acceptProjectInvitation(uint256 projectId, string memory goal) public {
+    function acceptProjectInvitation(uint256 projectId) public {
         require(invitesMapping[projectId].contains(msg.sender), "not invited to project");
         invitesMapping[projectId].remove(msg.sender);
         membersMapping[projectId].add(msg.sender);
-        projectMemberMapping[projectId][msg.sender].goal = goal;
         emit AcceptProjectInvitation(projectId, msg.sender);
     }
 
