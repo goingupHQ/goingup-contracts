@@ -663,31 +663,31 @@ describe('Project allow/disallow project members to edit', () => {
 
 describe('Project members', () => {
     it('Invite members to project but not authorized', async () => {
-        await expect(contractAsPublic1.inviteMember(1, public1, 'Member', 'Test')).to.be.revertedWith('cannot edit project');
+        await expect(contractAsPublic1.inviteMember(1, public1, 'Member', 'Test', 'evm-1;native;;1e18')).to.be.revertedWith('cannot edit project');
 
-        await expect(contractAsPublic1.inviteMember(2, public1, 'Member', 'Test')).to.be.revertedWith('cannot edit project');
+        await expect(contractAsPublic1.inviteMember(2, public1, 'Member', 'Test', 'evm-1;native;;1e18')).to.be.revertedWith('cannot edit project');
     });
 
     it('Invite members to project by owners', async () => {
-        await expect(contractAsProjectOwner1.inviteMember(1, project1Member1, 'Team Member', 'Build awesome dapp'))
+        await expect(contractAsProjectOwner1.inviteMember(1, project1Member1, 'Team Member', 'Build awesome dapp', 'evm-1;native;;1e18'))
             .to.emit(contract, 'InviteMember')
-            .withArgs(1, projectOwner1, project1Member1, 'Team Member', 'Build awesome dapp');
-        await expect(contractAsProjectOwner1.inviteMember(1, project1Member2, 'Team Member', 'Build awesome dapp'))
+            .withArgs(1, projectOwner1, project1Member1);
+        await expect(contractAsProjectOwner1.inviteMember(1, project1Member2, 'Team Member', 'Build awesome dapp', 'evm-1;native;;1e18'))
             .to.emit(contract, 'InviteMember')
-            .withArgs(1, projectOwner1, project1Member2, 'Team Member', 'Build awesome dapp');
-        await expect(contractAsProjectOwner1.inviteMember(1, project1Member3, 'Team Member', 'Build awesome dapp'))
+            .withArgs(1, projectOwner1, project1Member2);
+        await expect(contractAsProjectOwner1.inviteMember(1, project1Member3, 'Team Member', 'Build awesome dapp', 'evm-1;native;;1e18'))
             .to.emit(contract, 'InviteMember')
-            .withArgs(1, projectOwner1, project1Member3, 'Team Member', 'Build awesome dapp');
+            .withArgs(1, projectOwner1, project1Member3);
 
-        await expect(contractAsProjectOwner2.inviteMember(2, project2Member1, 'Associate', 'Organize Community'))
+        await expect(contractAsProjectOwner2.inviteMember(2, project2Member1, 'Associate', 'Organize Community', 'evm-1;native;;1e18'))
             .to.emit(contract, 'InviteMember')
-            .withArgs(2, projectOwner2, project2Member1, 'Associate', 'Organize Community');
-        await expect(contractAsProjectOwner2.inviteMember(2, project2Member2, 'Associate', 'Organize Community'))
+            .withArgs(2, projectOwner2, project2Member1);
+        await expect(contractAsProjectOwner2.inviteMember(2, project2Member2, 'Associate', 'Organize Community', 'evm-1;native;;1e18'))
             .to.emit(contract, 'InviteMember')
-            .withArgs(2, projectOwner2, project2Member2, 'Associate', 'Organize Community');
-        await expect(contractAsProjectOwner2.inviteMember(2, project2Member3, 'Associate', 'Organize Community'))
+            .withArgs(2, projectOwner2, project2Member2);
+        await expect(contractAsProjectOwner2.inviteMember(2, project2Member3, 'Associate', 'Organize Community', 'evm-1;native;;1e18'))
             .to.emit(contract, 'InviteMember')
-            .withArgs(2, projectOwner2, project2Member3, 'Associate', 'Organize Community');
+            .withArgs(2, projectOwner2, project2Member3);
     });
 
     it('Verify invites mapping', async () => {
@@ -739,25 +739,25 @@ describe('Project members', () => {
     });
 
     it('Re-invite members to project by owners', async () => {
-        await expect(contractAsProjectOwner1.inviteMember(1, project1Member1, 'Member', 'Create awesome dapp'))
+        await expect(contractAsProjectOwner1.inviteMember(1, project1Member1, 'Member', 'Create awesome dapp', 'evm-1;native;;1e18'))
             .to.emit(contract, 'InviteMember')
-            .withArgs(1, projectOwner1, project1Member1, 'Member', 'Create awesome dapp');
-        await expect(contractAsProjectOwner1.inviteMember(1, project1Member2, 'Member', 'Create awesome dapp'))
+            .withArgs(1, projectOwner1, project1Member1);
+        await expect(contractAsProjectOwner1.inviteMember(1, project1Member2, 'Member', 'Create awesome dapp', 'evm-1;native;;1e18'))
             .to.emit(contract, 'InviteMember')
-            .withArgs(1, projectOwner1, project1Member2, 'Member', 'Create awesome dapp');
-        await expect(contractAsProjectOwner1.inviteMember(1, project1Member3, 'Member', 'Create awesome dapp'))
+            .withArgs(1, projectOwner1, project1Member2);
+        await expect(contractAsProjectOwner1.inviteMember(1, project1Member3, 'Member', 'Create awesome dapp', 'evm-1;native;;1e18'))
             .to.emit(contract, 'InviteMember')
-            .withArgs(1, projectOwner1, project1Member3, 'Member', 'Create awesome dapp');
+            .withArgs(1, projectOwner1, project1Member3);
 
-        await expect(contractAsProjectOwner2.inviteMember(2, project2Member1, 'Associate', 'Organize community'))
+        await expect(contractAsProjectOwner2.inviteMember(2, project2Member1, 'Associate', 'Organize community', 'evm-1;native;;1e18'))
             .to.emit(contract, 'InviteMember')
-            .withArgs(2, projectOwner2, project2Member1, 'Associate', 'Organize community');
-        await expect(contractAsProjectOwner2.inviteMember(2, project2Member2, 'Associate', 'Organize community'))
+            .withArgs(2, projectOwner2, project2Member1);
+        await expect(contractAsProjectOwner2.inviteMember(2, project2Member2, 'Associate', 'Organize community', 'evm-1;native;;1e18'))
             .to.emit(contract, 'InviteMember')
-            .withArgs(2, projectOwner2, project2Member2, 'Associate', 'Organize community');
-        await expect(contractAsProjectOwner2.inviteMember(2, project2Member3, 'Associate', 'Organize community'))
+            .withArgs(2, projectOwner2, project2Member2);
+        await expect(contractAsProjectOwner2.inviteMember(2, project2Member3, 'Associate', 'Organize community', 'evm-1;native;;1e18'))
             .to.emit(contract, 'InviteMember')
-            .withArgs(2, projectOwner2, project2Member3, 'Associate', 'Organize community');
+            .withArgs(2, projectOwner2, project2Member3);
     });
 
     it('Accept invitation by public1 (not invited, should revert)', async () => {
@@ -821,9 +821,9 @@ describe('Project members', () => {
     });
 
     it('Project 1 owner invites public 1 address', async () => {
-        await expect(contractAsProjectOwner1.inviteMember(1, public1, 'test', 'test'))
+        await expect(contractAsProjectOwner1.inviteMember(1, public1, 'test', 'test', 'evm-1;native;;1e18'))
             .to.emit(contract, 'InviteMember')
-            .withArgs(1, projectOwner1, public1, 'test', 'test');
+            .withArgs(1, projectOwner1, public1);
     });
 
     it('Public 1 accepts project 1 owner invite', async () => {
@@ -861,9 +861,9 @@ describe('Project members', () => {
     });
 
     it('Project 1 owner invites public 1 address', async () => {
-        await expect(contractAsProjectOwner1.inviteMember(1, public1, 'test', 'test goal'))
+        await expect(contractAsProjectOwner1.inviteMember(1, public1, 'test', 'test goal', 'evm-1;native;;1e18'))
             .to.emit(contract, 'InviteMember')
-            .withArgs(1, projectOwner1, public1, 'test', 'test goal');
+            .withArgs(1, projectOwner1, public1);
     });
 
     it('Public 1 accepts project 1 owner invite', async () => {
@@ -999,185 +999,5 @@ describe('Project score/comment', () => {
         )
             .to.emit(contract, 'SubmitProjectReview')
             .withArgs(2, project1Member3, -5, 'this is a terrible project');
-    });
-});
-
-describe('Batch invite members and invite member fees', () => {
-    it('Invite members to project 1 by unauthorized address', async () => {
-        await expect(contractAsPublic1.inviteMembers(1, [project1Member1, project1Member2], ['Extra1', 'Extra2'], ['Extra 1 Goal', 'Extra 2 Goal'])).to.be.revertedWith(
-            'cannot edit project'
-        );
-    });
-
-    it('Invite members to project 2 by unauthorized address', async () => {
-        await expect(contractAsPublic1.inviteMembers(2, [project2Member1, project2Member2], ['Extra1', 'Extra2'], ['Extra 1 Goal', 'Extra 2 Goal'])).to.be.revertedWith(
-            'cannot edit project'
-        );
-    });
-
-    it('Project 1 Owner batch invites members to project 1 without sending fee', async () => {
-        const membersToInvite = project1ExtraMembers.map(member => member.address);
-        const roles = [];
-        const goals = [];
-        for (let i = 0; i < membersToInvite.length; i++) {
-            roles.push(`P1 Extra ${i + 1}`);
-            goals.push(`P1 Extra ${i + 1} Goal`);
-        }
-        await expect(contractAsProjectOwner1.inviteMembers(1, membersToInvite, roles, goals)).to.be.revertedWith(
-            'did not send enough'
-        );
-    });
-
-    it('Project 2 Owner batch invites members to project 2 without sending fee', async () => {
-        const membersToInvite = project2ExtraMembers.map(member => member.address);
-        const roles = [];
-        const goals = [];
-        for (let i = 0; i < membersToInvite.length; i++) {
-            roles.push(`P2 Extra ${i + 1}`);
-            goals.push(`P2 Extra ${i + 1} Goal`);
-        }
-        await expect(contractAsProjectOwner2.inviteMembers(2, membersToInvite, roles, goals)).to.be.revertedWith(
-            'did not send enough'
-        );
-    });
-
-    it('Project 1 Owner batch invites members to project 1 but did not send enough', async () => {
-        const membersToInvite = project1ExtraMembers.map(member => member.address);
-        const roles = [];
-        const goals = [];
-        for (let i = 0; i < membersToInvite.length; i++) {
-            roles.push(`P1 Extra ${i + 1}`);
-            goals.push(`P1 Extra ${i + 1} Goal`);
-        }
-        await expect(contractAsProjectOwner1.inviteMembers(1, membersToInvite, roles, goals, { value: 200 })).to.be.revertedWith(
-            'did not send enough'
-        );
-    });
-
-    it('Project 2 Owner batch invites members to project 2 but did not send enough', async () => {
-        const membersToInvite = project2ExtraMembers.map(member => member.address);
-        const roles = [];
-        const goals = [];
-        for (let i = 0; i < membersToInvite.length; i++) {
-            roles.push(`P2 Extra ${i + 1}`);
-            goals.push(`P2 Extra ${i + 1} Goal`);
-        }
-        await expect(contractAsProjectOwner2.inviteMembers(2, membersToInvite, roles, goals, { value: 200 })).to.be.revertedWith(
-            'did not send enough'
-        );
-    });
-
-    it('Project 1 Owner batch invites members to project 1 and send 1 ETH (reverts)', async () => {
-        const membersToInvite = project1ExtraMembers.map(member => member.address);
-        const roles = [];
-        const goals = [];
-        for (let i = 0; i < membersToInvite.length; i++) {
-            roles.push(`P1 Extra ${i + 1}`);
-            goals.push(`P1 Extra ${i + 1} Goal`);
-        }
-        await expect(contractAsProjectOwner1.inviteMembers(1, membersToInvite, roles, goals, { value: parseUnits('1') })).to.be.revertedWith(
-            'did not send enough'
-        );
-    });
-
-    it('Project 2 Owner batch invites members to project 2 and send 1 ETH (reverts)', async () => {
-        const membersToInvite = project2ExtraMembers.map(member => member.address);
-        const roles = [];
-        const goals = [];
-        for (let i = 0; i < membersToInvite.length; i++) {
-            roles.push(`P2 Extra ${i + 1}`);
-            goals.push(`P2 Extra ${i + 1} Goal`);
-        }
-        await expect(contractAsProjectOwner2.inviteMembers(2, membersToInvite, roles, goals, { value: parseUnits('1') })).to.be.revertedWith(
-            'did not send enough'
-        );
-    });
-
-    it('Project 1 Owner batch invites members to project 1 and send 2 ETH', async () => {
-        const membersToInvite = project1ExtraMembers.map(member => member.address);
-        const roles = [];
-        const goals = [];
-        for (let i = 0; i < membersToInvite.length; i++) {
-            roles.push(`P1 Extra ${i + 1}`);
-            goals.push(`P1 Extra ${i + 1} Goal`);
-        }
-        await expect(contractAsProjectOwner1.inviteMembers(1, membersToInvite, roles, goals, { value: parseUnits('2') }))
-            .to.emit(contract, 'InviteMember').withArgs(1, projectOwner1, membersToInvite[0], roles[0], goals[0]);
-    });
-
-    it('Project 2 Owner batch invites members to project 2 and send 9 ETH', async () => {
-        const membersToInvite = project2ExtraMembers.map(member => member.address);
-        const roles = [];
-        const goals = [];
-        for (let i = 0; i < membersToInvite.length; i++) {
-            roles.push(`P2 Extra ${i + 1}`);
-            goals.push(`P2 Extra ${i + 1} Goal`);
-        }
-        await expect(contractAsProjectOwner2.inviteMembers(2, membersToInvite, roles, goals, { value: parseUnits('9') }))
-            .to.emit(contract, 'InviteMember').withArgs(2, projectOwner2, membersToInvite[0], roles[0], goals[0]);
-    });
-
-    it('Project 1 Owner batch invites over 20 members to project 1 and send 4 ETH (reverts)', async () => {
-        const combinedMembers = [...project1ExtraMembers, ...project2ExtraMembers];
-        const membersToInvite = combinedMembers.map(member => member.address);
-        const roles = [];
-        const goals = [];
-        for (let i = 0; i < membersToInvite.length; i++) {
-            roles.push(`P1 Extra ${i + 1}`);
-            goals.push(`P1 Extra ${i + 1} Goal`);
-        }
-        await expect(contractAsProjectOwner1.inviteMembers(1, membersToInvite, roles, goals, { value: parseUnits('4') }))
-            .to.be.revertedWith('maximum of 20 members per transaction');
-    });
-
-    it('Project 2 Owner batch invites over 20 members to project 2 and send 18 ETH (reverts)', async () => {
-        const combinedMembers = [...project1ExtraMembers, ...project2ExtraMembers];
-        const membersToInvite = combinedMembers.map(member => member.address);
-        const roles = [];
-        const goals = [];
-        for (let i = 0; i < membersToInvite.length; i++) {
-            roles.push(`P2 Extra ${i + 1}`);
-            goals.push(`P2 Extra ${i + 1} Goal`);
-        }
-        await expect(contractAsProjectOwner2.inviteMembers(2, membersToInvite, roles, goals, { value: parseUnits('18') }))
-            .to.be.revertedWith('maximum of 20 members per transaction');
-    });
-
-    it('Project 1 Owner batch invites members with 0 roles to project 1 and send 2 ETH (revert)', async () => {
-        const membersToInvite = project1ExtraMembers.map(member => member.address);
-        const roles = [];
-        const goals = [];
-        await expect(contractAsProjectOwner1.inviteMembers(1, membersToInvite, roles, goals, { value: parseUnits('2') }))
-            .to.be.revertedWith('number of addresses and roles must match');
-    });
-
-    it('Project 2 Owner batch invites members with 0 roles to project 2 and send 9 ETH (revert)', async () => {
-        const membersToInvite = project2ExtraMembers.map(member => member.address);
-        const roles = [];
-        const goals = [];
-        await expect(contractAsProjectOwner2.inviteMembers(2, membersToInvite, roles, goals, { value: parseUnits('9') }))
-            .to.be.revertedWith('number of addresses and roles must match');
-    });
-
-    it('Project 1 Owner batch invites members with 0 goals to project 1 and send 2 ETH (revert)', async () => {
-        const membersToInvite = project1ExtraMembers.map(member => member.address);
-        const roles = [];
-        const goals = [];
-        for (let i = 0; i < membersToInvite.length; i++) {
-            roles.push(`P2 Extra ${i + 1}`);
-        }
-        await expect(contractAsProjectOwner1.inviteMembers(1, membersToInvite, roles, goals, { value: parseUnits('2') }))
-            .to.be.revertedWith('number of addresses and goals must match');
-    });
-
-    it('Project 2 Owner batch invites members with 0 goals to project 2 and send 9 ETH (revert)', async () => {
-        const membersToInvite = project2ExtraMembers.map(member => member.address);
-        const roles = [];
-        const goals = [];
-        for (let i = 0; i < membersToInvite.length; i++) {
-            roles.push(`P2 Extra ${i + 1}`);
-        }
-        await expect(contractAsProjectOwner2.inviteMembers(2, membersToInvite, roles, goals, { value: parseUnits('9') }))
-            .to.be.revertedWith('number of addresses and goals must match');
     });
 });

@@ -26,6 +26,7 @@ contract GoingUpProjects {
     struct ProjectMember {
         string role;
         string goal;
+        string rewardData; // semi-colon separated values of the form: "blockchain;type;address;amount"
     }
 
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -123,19 +124,33 @@ contract GoingUpProjects {
         emit AddMemberPriceOverrideSet(msg.sender, targetAddress, overridePrice);
     }
 
-    modifier sentEnoughForAddMembers(uint256 projectId, uint256 count) {
+    modifier sentEnoughForAddMember(uint256 projectId) {
         uint256 _price = addMemberPriceOverrides[msg.sender];
         if (_price == 0) {
             _price = addMemberPrice;
         }
 
-        if (invitesMapping[projectId].length() + membersMapping[projectId].length() + count > freeMembers) {
-            require(msg.value >= _price * (count), "did not send enough");
+        if (invitesMapping[projectId].length() + membersMapping[projectId].length() + 1 > freeMembers) {
+            require(msg.value >= _price, "did not send enough");
             _;
         } else {
             _;
         }
     }
+
+    // modifier sentEnoughForAddMembers(uint256 projectId, uint256 count) {
+    //     uint256 _price = addMemberPriceOverrides[msg.sender];
+    //     if (_price == 0) {
+    //         _price = addMemberPrice;
+    //     }
+
+    //     if (invitesMapping[projectId].length() + membersMapping[projectId].length() + count > freeMembers) {
+    //         require(msg.value >= _price * (count), "did not send enough");
+    //         _;
+    //     } else {
+    //         _;
+    //     }
+    // }
 
 
     /// @notice Projects mapping
@@ -314,33 +329,17 @@ contract GoingUpProjects {
     /// @param projectId Project ID
     /// @param from Authorized address issuing the invitation
     /// @param to Address invited to become a member of the project
-    /// @param role Member role in project
-    event InviteMember(uint256 indexed projectId, address from, address to, string role, string goal);
+    event InviteMember(uint256 indexed projectId, address from, address to);
 
     /// @notice Invite a member to project
     /// @param projectId Project ID
     /// @param member Address to invite to become a member of the project
-    function inviteMember(uint256 projectId, address member, string memory role, string memory goal) public payable canEditProject(projectId) sentEnoughForAddMembers(projectId, 1) {
+    function inviteMember(uint256 projectId, address member, string calldata role, string calldata goal, string calldata rewardData) public payable canEditProject(projectId) sentEnoughForAddMember(projectId) {
         invitesMapping[projectId].add(member);
         projectMemberMapping[projectId][member].role = role;
         projectMemberMapping[projectId][member].goal = goal;
-        emit InviteMember(projectId, msg.sender, member, role, goal);
-    }
-
-    /// @notice Invite members to project (max of 20 members per transaction)
-    /// @param projectId Project ID
-    /// @param addresses Member addresses to invite to become members of the project
-    /// @param roles Member roles in project
-    function inviteMembers(uint256 projectId, address[] memory addresses, string[] memory roles, string[] memory goals) public payable canEditProject(projectId) sentEnoughForAddMembers(projectId, addresses.length) {
-        require(addresses.length <= 20, "maximum of 20 members per transaction");
-        require(addresses.length == roles.length, "number of addresses and roles must match");
-        require(addresses.length == goals.length, "number of addresses and goals must match");
-        for (uint i = 0; i < addresses.length; i++) {
-            invitesMapping[projectId].add(addresses[i]);
-            projectMemberMapping[projectId][addresses[i]].role = roles[i];
-            projectMemberMapping[projectId][addresses[i]].goal = goals[i];
-            emit InviteMember(projectId, msg.sender, addresses[i], roles[i], goals[i]);
-        }
+        projectMemberMapping[projectId][member].rewardData = rewardData;
+        emit InviteMember(projectId, msg.sender, member);
     }
 
     /// @notice This event is emitted when an authorized address disinvites a pending invite
