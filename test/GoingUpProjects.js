@@ -884,20 +884,70 @@ describe('Project members', () => {
             .withArgs(1, projectOwner1, public1, 'was never a member');
     });
 
-    it('Change project1 member1 role by unauthorize address', async () => {
-        await expect(contractAsProject1Member1.changeMemberRole(1, project1Member1, 'Associate')).to.be.revertedWith(
-            'cannot edit project'
+    it('Unauthorized address sets project member goal as achieved', async () => {
+        await expect(contractAsPublic1.setMemberGoalAsAchieved(1, project1Member1)).to.be.revertedWith('cannot edit project');
+    });
+
+    it('Project 1 owner sets non project member goal as achieved', async () => {
+        await expect(contractAsProjectOwner1.setMemberGoalAsAchieved(1, public1))
+            .to.be.revertedWith('not a member of project');
+    });
+
+    it('Project 1 owner sets project member goal as achieved', async () => {
+        await expect(contractAsProjectOwner1.setMemberGoalAsAchieved(1, project1Member1))
+            .to.emit(contract, 'SetMemberGoalAsAchieved')
+            .withArgs(1, projectOwner1, project1Member1);
+    });
+
+    it('Verify project member goal is achieved', async () => {
+        const member = await contractAsPublic1.projectMemberMapping(1, project1Member1);
+        expect(member.goalAchieved).to.equal(true);
+    });
+
+    it('Unauthorized address sets project member reward as verified', async () => {
+        await expect(contractAsPublic1.setMemberRewardAsVerified(1, project1Member1)).to.be.revertedWith(
+            'not admin'
         );
     });
 
-    it('Change project1 member1 role by project owner', async () => {
-        await expect(contractAsProjectOwner1.changeMemberRole(1, project1Member1, 'Associate'))
-            .to.emit(contract, 'ChangeMemberRole')
-            .withArgs(1, projectOwner1, project1Member1, 'Associate');
+    it('Project 1 owner sets non project member reward as verified (revert not admin)', async () => {
+        await expect(contractAsProjectOwner1.setMemberRewardAsVerified(1, public1))
+            .to.be.revertedWith('not admin');
     });
 
-    it('Verify project1 member1 role has changed', async () => {
-        expect((await contract.projectMemberMapping(1, project1Member1)).role).to.equal('Associate');
+    it('Admin1 sets non-member reward as verified', async () => {
+        await expect(contractAsAdmin1.setMemberRewardAsVerified(1, public1))
+            .to.be.revertedWith('not a member of project');
+    });
+
+    it('Admin1 sets project member reward as verified', async () => {
+        await expect(contractAsAdmin1.setMemberRewardAsVerified(1, project1Member1))
+            .to.emit(contract, 'SetMemberRewardAsVerified')
+            .withArgs(1, admin1, project1Member1);
+    });
+
+    it('Verify project member reward is verified', async () => {
+        const member = await contractAsPublic1.projectMemberMapping(1, project1Member1);
+        expect(member.rewardVerified).to.equal(true);
+    });
+
+    it('Unauthorized address sets project member extra data', async () => {
+        await expect(contractAsPublic1.setProjectMemberExtraData(1, project1Member1, 'test')).to.be.revertedWith('cannot edit project');
+    });
+
+    it('Project 1 owner sets non project member extra data', async () => {
+        await expect(contractAsProjectOwner1.setProjectMemberExtraData(1, public1, 'test')).to.be.revertedWith('not a member of project');
+    });
+
+    it('Project 1 owner sets project member extra data', async () => {
+        await expect(contractAsProjectOwner1.setProjectMemberExtraData(1, project1Member1, 'test'))
+            .to.emit(contract, 'SetProjectMemberExtraData')
+            .withArgs(1, projectOwner1, project1Member1);
+    });
+
+    it('Verify project member extra data', async () => {
+        const member = await contractAsPublic1.projectMemberMapping(1, project1Member1);
+        expect(member.extraData).to.equal('test');
     });
 });
 

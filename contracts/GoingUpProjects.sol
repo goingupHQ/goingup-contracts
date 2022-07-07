@@ -27,6 +27,9 @@ contract GoingUpProjects {
         string role;
         string goal;
         string rewardData; // semi-colon separated values of the form: "blockchain;type;address;amount"
+        bool goalAchieved;
+        bool rewardVerified;
+        string extraData;
     }
 
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -60,7 +63,7 @@ contract GoingUpProjects {
     /// @notice Sets the admin flag for address
     /// @param targetAddress Target address to set admin flag
     /// @param isAdmin Admin flag to set (true means address is admin, false mean address is not admin)
-    function setAdmin(address targetAddress, bool isAdmin) public onlyOwner {
+    function setAdmin(address targetAddress, bool isAdmin)  public onlyOwner {
         admins[targetAddress] = isAdmin;
     }
 
@@ -137,21 +140,6 @@ contract GoingUpProjects {
             _;
         }
     }
-
-    // modifier sentEnoughForAddMembers(uint256 projectId, uint256 count) {
-    //     uint256 _price = addMemberPriceOverrides[msg.sender];
-    //     if (_price == 0) {
-    //         _price = addMemberPrice;
-    //     }
-
-    //     if (invitesMapping[projectId].length() + membersMapping[projectId].length() + count > freeMembers) {
-    //         require(msg.value >= _price * (count), "did not send enough");
-    //         _;
-    //     } else {
-    //         _;
-    //     }
-    // }
-
 
     /// @notice Projects mapping
     mapping(uint256 => Project) public projects;
@@ -413,24 +401,37 @@ contract GoingUpProjects {
     function removeMember(uint256 projectId, address member, string memory reason) public canEditProject(projectId) {
         require(membersMapping[projectId].contains(member), "cannot remove a non-member");
         membersMapping[projectId].remove(member);
-        projectMemberMapping[projectId][member].role = "";
         emit RemoveMember(projectId, msg.sender, member, reason);
     }
 
-    /// @notice This event is emitted when an authorized address changes a member address role in project
+    /// @notice This event is emitted when a project owner sets a member's goal as achieved
+    /// @param projectId Project ID
+    /// @param setAsAchievedBy Authorized address setting the member's goal as achieved
+    /// @param member Member address
+    event SetMemberGoalAsAchieved(uint256 indexed projectId, address setAsAchievedBy, address member);
+
+    /// @notice Set member's goal as achieved
     /// @param projectId Project ID
     /// @param member Member address
-    /// @param newRole New role in project
-    event ChangeMemberRole(uint256 projectId, address changedBy, address member, string newRole);
+    function setMemberGoalAsAchieved(uint256 projectId, address member) public canEditProject(projectId) {
+        require(membersMapping[projectId].contains(member), "not a member of project");
+        projectMemberMapping[projectId][member].goalAchieved = true;
+        emit SetMemberGoalAsAchieved(projectId, msg.sender, member);
+    }
 
-    /// @notice Change member role in project (only accessible to authorized addresses)
+    /// @notice This event is emitted when an admin address sets a member's reward as verified
     /// @param projectId Project ID
-    /// @param member Member address to change role for
-    /// @param newRole New role in project
-    function changeMemberRole(uint256 projectId, address member, string memory newRole) public canEditProject(projectId) {
-        require(membersMapping[projectId].contains(member), "cannot change role of non-member");
-        projectMemberMapping[projectId][member].role = newRole;
-        emit ChangeMemberRole(projectId, msg.sender, member, newRole);
+    /// @param setAsVerifiedBy Authorized address setting the member's reward as verified
+    /// @param member Member address
+    event SetMemberRewardAsVerified(uint256 indexed projectId, address setAsVerifiedBy, address member);
+
+    /// @notice Set member's reward as verified
+    /// @param projectId Project ID
+    /// @param member Member address
+    function setMemberRewardAsVerified(uint256 projectId, address member) public onlyAdmin {
+        require(membersMapping[projectId].contains(member), "not a member of project");
+        projectMemberMapping[projectId][member].rewardVerified = true;
+        emit SetMemberRewardAsVerified(projectId, msg.sender, member);
     }
 
     /// @notice Get project members
@@ -450,10 +451,11 @@ contract GoingUpProjects {
     /// @param member Member address to add to project
     /// @param role Role in project
     /// @param goal Goal for project member
-    function manuallyAddMember(uint256 projectId, address member, string memory role, string memory goal) public onlyAdmin {
+    function manuallyAddMember(uint256 projectId, address member, string calldata role, string calldata goal, string calldata rewardData) public onlyAdmin {
         membersMapping[projectId].add(member);
         projectMemberMapping[projectId][member].role = role;
         projectMemberMapping[projectId][member].goal = goal;
+        projectMemberMapping[projectId][member].rewardData = rewardData;
         emit ManuallyAddMember(projectId, msg.sender, member);
     }
 
@@ -471,6 +473,22 @@ contract GoingUpProjects {
     function setProjectExtraData(uint256 projectId, string memory key, string memory value) public canEditProject(projectId) {
         extraData[projectId][key] = value;
         emit SetProjectExtraData(projectId, msg.sender, key, value);
+    }
+
+    /// @notice This event is emitted when an authorized address sets project member's extra data
+    /// @param projectId Project ID
+    /// @param setBy Authorized address adding extra data
+    /// @param member Member address
+    event SetProjectMemberExtraData(uint256 indexed projectId, address setBy, address member);
+
+    /// @notice Set project member's extra data
+    /// @param projectId Project ID
+    /// @param member Member address
+    /// @param data Extra data string
+    function setProjectMemberExtraData(uint256 projectId, address member, string memory data) public canEditProject(projectId) {
+        require(membersMapping[projectId].contains(member), "not a member of project");
+        projectMemberMapping[projectId][member].extraData = data;
+        emit SetProjectMemberExtraData(projectId, msg.sender, member);
     }
 
     /// @notice This event is emitted when a score and/or comment is added to a project
