@@ -1,4 +1,5 @@
 require('@nomiclabs/hardhat-waffle');
+require('hardhat-docgen');
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -36,5 +37,10 @@ module.exports = {
                 },
             },
         ]
+    },
+    docgen: {
+        path: './docs/',
+        clear: true,
+        runOnCompile: true
     }
 };
