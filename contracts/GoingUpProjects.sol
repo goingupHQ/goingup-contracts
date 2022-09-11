@@ -33,6 +33,7 @@ contract GoingUpProjects {
     }
 
     using EnumerableSet for EnumerableSet.AddressSet;
+    using EnumerableSet for EnumerableSet.UintSet;
 
     constructor () {
         owner = msg.sender;
@@ -145,10 +146,12 @@ contract GoingUpProjects {
     mapping(uint256 => Project) public projects;
 
     mapping(uint256 => EnumerableSet.AddressSet) private membersMapping;
+    mapping(address => EnumerableSet.UintSet) private projectsByAddressMapping;
     mapping(uint256 => mapping(address => ProjectMember)) public projectMemberMapping;
 
-    /// @notice Project invites array
+    /// @notice Project invites mappings
     mapping(uint256 => EnumerableSet.AddressSet) private invitesMapping;
+    mapping(address => EnumerableSet.UintSet) private invitesByAddressMapping;
 
     /// @notice Project extra data storage
     mapping(uint256 => mapping(string => string)) public extraData;
@@ -327,6 +330,7 @@ contract GoingUpProjects {
         projectMemberMapping[projectId][member].role = role;
         projectMemberMapping[projectId][member].goal = goal;
         projectMemberMapping[projectId][member].rewardData = rewardData;
+        invitesByAddressMapping[member].add(projectId);
         emit InviteMember(projectId, msg.sender, member);
     }
 
@@ -342,7 +346,14 @@ contract GoingUpProjects {
     function disinviteMember(uint256 projectId, address member) public canEditProject(projectId) {
         invitesMapping[projectId].remove(member);
         projectMemberMapping[projectId][member].role = "";
+        invitesByAddressMapping[member].remove(projectId);
         emit DisinviteMember(projectId, msg.sender, member);
+    }
+
+    /// @notice Get project ids invited to by address
+    /// @param member Address to get project ids invited to
+    function getPendingInvitesByAddress(address member) public view returns (uint256[] memory) {
+        return invitesByAddressMapping[member].values();
     }
 
     /// @notice isAddressInvitedToProject returns true if address is invited to project
@@ -366,8 +377,10 @@ contract GoingUpProjects {
     /// @param projectId Project ID
     function acceptProjectInvitation(uint256 projectId) public {
         require(invitesMapping[projectId].contains(msg.sender), "not invited to project");
+        invitesByAddressMapping[msg.sender].remove(projectId);
         invitesMapping[projectId].remove(msg.sender);
         membersMapping[projectId].add(msg.sender);
+        projectsByAddressMapping[msg.sender].add(projectId);
         emit AcceptProjectInvitation(projectId, msg.sender);
     }
 
@@ -384,6 +397,7 @@ contract GoingUpProjects {
         require(membersMapping[projectId].contains(msg.sender), "not a member of project");
         membersMapping[projectId].remove(msg.sender);
         projectMemberMapping[projectId][msg.sender].role = "";
+        projectsByAddressMapping[msg.sender].remove(projectId);
         emit LeaveProject(projectId, msg.sender, reason);
     }
 
@@ -401,7 +415,14 @@ contract GoingUpProjects {
     function removeMember(uint256 projectId, address member, string memory reason) public canEditProject(projectId) {
         require(membersMapping[projectId].contains(member), "cannot remove a non-member");
         membersMapping[projectId].remove(member);
+        projectsByAddressMapping[member].remove(projectId);
         emit RemoveMember(projectId, msg.sender, member, reason);
+    }
+
+    /// @notice Get project ids member is a member of
+    /// @param member Member address
+    function getProjectsByAddress(address member) public view returns (uint256[] memory) {
+        return projectsByAddressMapping[member].values();
     }
 
     /// @notice This event is emitted when a project owner sets a member's goal as achieved
