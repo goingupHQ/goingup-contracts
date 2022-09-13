@@ -326,6 +326,8 @@ contract GoingUpProjects {
     /// @param projectId Project ID
     /// @param member Address to invite to become a member of the project
     function inviteMember(uint256 projectId, address member, string calldata role, string calldata goal, string calldata rewardData) public payable canEditProject(projectId) sentEnoughForAddMember(projectId) {
+        require(!membersMapping[projectId].contains(member), "Member is already a member of this project");
+
         invitesMapping[projectId].add(member);
         projectMemberMapping[projectId][member].role = role;
         projectMemberMapping[projectId][member].goal = goal;
