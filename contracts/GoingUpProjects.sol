@@ -185,19 +185,19 @@ contract GoingUpProjects {
     /// @param primaryUrl Project primary url
     /// @param tags Project tags
     function create(string memory name, string memory description, uint started, uint ended, string memory primaryUrl, string memory tags, bool isPrivate) public payable sentEnough {
-        Project memory newProject;
-
-        newProject.id = idCounter;
-        newProject.name = name;
-        newProject.description = description;
-        newProject.started = started;
-        newProject.ended = ended;
-        newProject.primaryUrl = primaryUrl;
-        newProject.tags = tags;
-        newProject.isPrivate = isPrivate;
-        newProject.owner = msg.sender;
-        newProject.active = true;
-        newProject.allowMembersToEdit = false;
+        Project memory newProject = Project({
+            id: idCounter,
+            name: name,
+            description: description,
+            started: started,
+            ended: ended,
+            primaryUrl: primaryUrl,
+            tags: tags,
+            owner: msg.sender,
+            active: true,
+            allowMembersToEdit: false,
+            isPrivate: isPrivate
+        });
 
         projects[idCounter] = newProject;
         idCounter++;
