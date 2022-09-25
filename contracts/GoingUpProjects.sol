@@ -332,6 +332,9 @@ contract GoingUpProjects {
         projectMemberMapping[projectId][member].role = role;
         projectMemberMapping[projectId][member].goal = goal;
         projectMemberMapping[projectId][member].rewardData = rewardData;
+        projectMemberMapping[projectId][member].goalAchieved = false;
+        projectMemberMapping[projectId][member].rewardVerified = false;
+        projectMemberMapping[projectId][member].extraData = "";
         invitesByAddressMapping[member].add(projectId);
         emit InviteMember(projectId, msg.sender, member);
     }
@@ -348,6 +351,11 @@ contract GoingUpProjects {
     function disinviteMember(uint256 projectId, address member) public canEditProject(projectId) {
         invitesMapping[projectId].remove(member);
         projectMemberMapping[projectId][member].role = "";
+        projectMemberMapping[projectId][member].goal = "";
+        projectMemberMapping[projectId][member].rewardData = "";
+        projectMemberMapping[projectId][member].goalAchieved = false;
+        projectMemberMapping[projectId][member].rewardVerified = false;
+        projectMemberMapping[projectId][member].extraData = "";
         invitesByAddressMapping[member].remove(projectId);
         emit DisinviteMember(projectId, msg.sender, member);
     }
@@ -398,7 +406,14 @@ contract GoingUpProjects {
         require(projects[projectId].owner != msg.sender, "owner cannot leave project");
         require(membersMapping[projectId].contains(msg.sender), "not a member of project");
         membersMapping[projectId].remove(msg.sender);
+
         projectMemberMapping[projectId][msg.sender].role = "";
+        projectMemberMapping[projectId][msg.sender].goal = "";
+        projectMemberMapping[projectId][msg.sender].rewardData = "";
+        projectMemberMapping[projectId][msg.sender].goalAchieved = false;
+        projectMemberMapping[projectId][msg.sender].rewardVerified = false;
+        projectMemberMapping[projectId][msg.sender].extraData = "";
+
         projectsByAddressMapping[msg.sender].remove(projectId);
         emit LeaveProject(projectId, msg.sender, reason);
     }
@@ -417,6 +432,14 @@ contract GoingUpProjects {
     function removeMember(uint256 projectId, address member, string memory reason) public canEditProject(projectId) {
         require(membersMapping[projectId].contains(member), "cannot remove a non-member");
         membersMapping[projectId].remove(member);
+
+        projectMemberMapping[projectId][member].role = "";
+        projectMemberMapping[projectId][member].goal = "";
+        projectMemberMapping[projectId][member].rewardData = "";
+        projectMemberMapping[projectId][member].goalAchieved = false;
+        projectMemberMapping[projectId][member].rewardVerified = false;
+        projectMemberMapping[projectId][member].extraData = "";
+
         projectsByAddressMapping[member].remove(projectId);
         emit RemoveMember(projectId, msg.sender, member, reason);
     }
@@ -438,6 +461,7 @@ contract GoingUpProjects {
     /// @param member Member address
     function setMemberGoalAsAchieved(uint256 projectId, address member) public canEditProject(projectId) {
         require(membersMapping[projectId].contains(member), "not a member of project");
+        require(!projectMemberMapping[projectId][member].goalAchieved, "goal already achieved");
         projectMemberMapping[projectId][member].goalAchieved = true;
         emit SetMemberGoalAsAchieved(projectId, msg.sender, member);
     }
@@ -453,6 +477,8 @@ contract GoingUpProjects {
     /// @param member Member address
     function setMemberRewardAsVerified(uint256 projectId, address member) public onlyAdmin {
         require(membersMapping[projectId].contains(member), "not a member of project");
+        require(projectMemberMapping[projectId][member].goalAchieved, "goal not achieved");
+        require(!projectMemberMapping[projectId][member].rewardVerified, "reward already verified");
         projectMemberMapping[projectId][member].rewardVerified = true;
         emit SetMemberRewardAsVerified(projectId, msg.sender, member);
     }
