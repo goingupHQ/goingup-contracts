@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -26,7 +26,7 @@ contract GoingUpProjects {
     struct ProjectMember {
         string role;
         string goal;
-        string rewardData; // semi-colon separated values of the form: "blockchain;type;address;amount"
+        string rewardData; // json format
         bool goalAchieved;
         bool rewardVerified;
         string extraData;
