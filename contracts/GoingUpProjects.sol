@@ -5,6 +5,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
 /// @title GoingUP Platform Projects Smart Contract
 /// @author Mark Ibanez
@@ -24,9 +26,12 @@ contract GoingUpProjects {
     }
 
     struct ProjectMember {
+        uint256 projectId;
+        address member;
         string role;
         string goal;
         string rewardData; // json format
+        bool inviteAccepted;
         bool goalAchieved;
         bool rewardVerified;
         string extraData;
@@ -34,6 +39,9 @@ contract GoingUpProjects {
 
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
+    using EnumerableMap for EnumerableMap.UintToUintMap;
+    using EnumerableMap for EnumerableMap.AddressToUintMap;
+    using Counters for Counters.Counter;
 
     constructor () {
         owner = msg.sender;
@@ -145,13 +153,15 @@ contract GoingUpProjects {
     /// @notice Projects mapping
     mapping(uint256 => Project) public projects;
 
-    mapping(uint256 => EnumerableSet.AddressSet) private membersMapping;
-    mapping(address => EnumerableSet.UintSet) private projectsByAddressMapping;
-    mapping(uint256 => mapping(address => ProjectMember)) public projectMemberMapping;
+    EnumerableMap.UintToUintMap private membersMapping;
+    EnumerableMap.AddressToUintMap private projectsByAddressMapping;
+    EnumerableMap.UintToUintMap private projectMemberMapping;
+    mapping(uint256 => ProjectMember) public projectMemberStorage;
 
     /// @notice Project invites mappings
-    mapping(uint256 => EnumerableSet.AddressSet) private invitesMapping;
-    mapping(address => EnumerableSet.UintSet) private invitesByAddressMapping;
+    Counters.Counter private projectMemberCounter;
+    EnumerableMap.UintToUintMap private invitesMapping;
+    EnumerableMap.AddressToUintMap private invitesByAddressMapping;
 
     /// @notice Project extra data storage
     mapping(uint256 => mapping(string => string)) public extraData;
@@ -328,27 +338,34 @@ contract GoingUpProjects {
     function inviteMember(uint256 projectId, address member, string calldata role, string calldata goal, string calldata rewardData) public payable canEditProject(projectId) sentEnoughForAddMember(projectId) {
         require(!membersMapping[projectId].contains(member), "Member is already a member of this project");
 
-        invitesMapping[projectId].add(member);
-        projectMemberMapping[projectId][member].role = role;
-        projectMemberMapping[projectId][member].goal = goal;
-        projectMemberMapping[projectId][member].rewardData = rewardData;
-        projectMemberMapping[projectId][member].goalAchieved = false;
-        projectMemberMapping[projectId][member].rewardVerified = false;
-        projectMemberMapping[projectId][member].extraData = "";
-        invitesByAddressMapping[member].add(projectId);
+        projectMemberCounter.increment();
+        uint256 memberRecordId = projectMemberCounter.current();
+
+        projectMemberStorage[memberRecordId] = ProjectMember({
+            member: member,
+            role: role,
+            goal: goal,
+            rewardData: rewardData,
+            inviteAccepted: false,
+            goalAchieved: false,
+            rewardVerified: false,
+            extraData: ""
+        });
+
+        projectMemberMapping.set(projectId, memberRecordId);
         emit InviteMember(projectId, msg.sender, member);
     }
 
     /// @notice This event is emitted when an authorized address disinvites a pending invite
     /// @param projectId Project ID
-    /// @param from Authorized address issuing the invitation
-    /// @param to Address to disinvite
-    event DisinviteMember(uint256 indexed projectId, address from, address to);
+    /// @param by Authorized address issuing the invitation
+    /// @param memberRecordId Member record ID
+    event DisinviteMember(uint256 indexed projectId, address by, uint256 memberRecordId);
 
     /// @notice Disinvite member from project
     /// @param projectId Project ID
     /// @param member Address to disinvite from project
-    function disinviteMember(uint256 projectId, address member) public canEditProject(projectId) {
+    function disinviteMember(uint256 projectId, uint256 memberRecordId) public canEditProject(projectId) {
         invitesMapping[projectId].remove(member);
         projectMemberMapping[projectId][member].role = "";
         projectMemberMapping[projectId][member].goal = "";
