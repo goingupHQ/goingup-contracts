@@ -475,27 +475,6 @@ contract GoingUpProjects {
         return invitesByAddressMapping[member].values();
     }
 
-    /// @notice isAddressInvitedToProject returns true if address is invited to project
-    /// @param projectId Project ID
-    /// @param addressToCheck Address to check if invited to project
-    function isAddressInvitedToProject(
-        uint256 projectId,
-        address addressToCheck
-    ) public view returns (bool) {
-        bool isInvited = false;
-        for (
-            uint256 i = 0;
-            i < invitesMapping.get(projectId).length;
-            i++
-        ) {
-            uint256 memberRecordId = invitesMapping.get(projectId)[i];
-            if (projectMemberStorage[memberRecordId].member == addressToCheck) {
-                isInvited = true;
-            }
-        }
-        return isInvited;
-    }
-
     /// @notice Get pending invites for project
     /// @param projectId Project ID
     function getPendingInvites(uint256 projectId)
@@ -503,13 +482,7 @@ contract GoingUpProjects {
         view
         returns (uint256[] memory)
     {
-        uint[] memory memberRecordIds;
-        for (uint256 i = 0; i < invitesMapping.get(projectId).length; i++) {
-            uint256 memberRecordId = invitesMapping.get(projectId)[i];
-            memberRecordIds.push(memberRecordId);
-        }
-
-        return memberRecordIds;
+        return invitesMapping[projectId].values();
     }
 
     /// @notice This event is emitted when a member address accepts invitation to be a project member
@@ -527,17 +500,17 @@ contract GoingUpProjects {
         );
 
         uint256 projectId = projectMemberStorage[memberRecordId].projectId;
-        bool isInvited = isAddressInvitedToProject(projectId, msg.sender);
+        bool isInvited = invitesMapping[projectId].contains(memberRecordId);
         require(
             isInvited,
             "not invited to project"
         );
 
-        invitesByAddressMapping.remove(msg.sender, memberRecordId);
-        invitesMapping.remove(projectId, memberRecordId);
+        invitesMapping[projectId].remove(memberRecordId);
+        invitesByAddressMapping[msg.sender].remove(memberRecordId);
 
-        membersMapping.set(projectId, memberRecordId);
-        membersByAddressMapping.set(msg.sender, memberRecordId);
+        membersMapping[projectId].add(memberRecordId);
+        membersByAddressMapping[msg.sender].add(memberRecordId);
 
         emit AcceptProjectInvitation(projectId, msg.sender, memberRecordId);
     }
@@ -567,8 +540,8 @@ contract GoingUpProjects {
             "only member can leave project"
         );
 
-        membersMapping.remove(projectId, memberRecordId);
-        membersByAddressMapping.remove(msg.sender, memberRecordId);
+        membersMapping[projectId].remove(memberRecordId);
+        membersByAddressMapping[msg.sender].remove(memberRecordId);
 
         emit LeaveProject(projectId, memberRecordId, reason);
     }
@@ -594,11 +567,9 @@ contract GoingUpProjects {
         uint256 memberRecordId,
         string memory reason
     ) public canEditProject(projectId) {
-        membersMapping.remove(projectId, memberRecordId);
-        membersByAddressMapping.remove(
-            projectMemberStorage[memberRecordId].member,
-            memberRecordId
-        );
+        membersMapping[projectId].remove(memberRecordId);
+        membersByAddressMapping[projectMemberStorage[memberRecordId].member]
+            .remove(memberRecordId);
 
         emit RemoveMember(projectId, msg.sender, memberRecordId, reason);
     }
@@ -610,16 +581,7 @@ contract GoingUpProjects {
         view
         returns (uint256[] memory)
     {
-        uint256[] memory projectIds;
-
-        for (
-            uint256 i = 0;
-            i < membersByAddressMapping.get(member).length;
-            i++
-        ) {
-            uint256 memberRecordId = membersByAddressMapping.get(member)[i];
-            projectIds.push(projectMemberStorage[memberRecordId].projectId);
-        }
+        return membersByAddressMapping[member].values();
     }
 
     /// @notice This event is emitted when a project owner sets a member's goal as achieved
@@ -651,11 +613,11 @@ contract GoingUpProjects {
     /// @notice This event is emitted when an admin address sets a member's reward as verified
     /// @param projectId Project ID
     /// @param setAsVerifiedBy Authorized address setting the member's reward as verified
-    /// @param member Member address
+    /// @param memberRecordId Member record ID
     event SetMemberRewardAsVerified(
         uint256 indexed projectId,
         address setAsVerifiedBy,
-        address member
+        uint256 memberRecordId
     );
 
     /// @notice Set member's reward as verified
@@ -679,7 +641,7 @@ contract GoingUpProjects {
     function getProjectMembers(uint256 projectId)
         public
         view
-        returns (address[] memory)
+        returns (uint256[] memory)
     {
         return membersMapping[projectId].values();
     }
@@ -724,8 +686,8 @@ contract GoingUpProjects {
             extraData: ""
         });
 
-        membersMapping.set(projectId, memberRecordId);
-        membersByAddressMapping.set(member, memberRecordId);
+        membersMapping[projectId].add(memberRecordId);
+        membersByAddressMapping[member].add(memberRecordId);
     }
 
     /// @notice This event is emitted when an authorized address sets project extra data
