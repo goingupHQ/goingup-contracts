@@ -152,6 +152,9 @@ contract GoingUpProjects {
             _price = addMemberPrice;
         }
 
+        uint256 invitesCount = 0;
+
+
         if (
             invitesMapping[projectId].length() +
                 membersMapping[projectId].length() +
@@ -174,16 +177,16 @@ contract GoingUpProjects {
     mapping(uint256 => ProjectMember) public projectMemberStorage;
 
     /// @dev Members mapped to project
-    EnumerableMap.UintToUintMap private membersMapping;
+    mapping(uint256 => EnumerableSet.UintSet) private membersMapping;
 
     /// @dev Member records mapped to address
-    EnumerableMap.AddressToUintMap private membersByAddressMapping;
+    mapping(address => EnumerableSet.UintSet) private membersByAddressMapping;
 
     /// @dev Invites mapped to project
-    EnumerableMap.UintToUintMap private invitesMapping;
+    mapping(uint256 => EnumerableSet.UintSet) private invitesMapping;
 
     /// @dev Invites mapped to member
-    EnumerableMap.AddressToUintMap private invitesByAddressMapping;
+    mapping(address => EnumerableSet.UintSet) private invitesByAddressMapping;
 
     /// @notice Project extra data storage
     mapping(uint256 => mapping(string => string)) public extraData;
@@ -201,7 +204,7 @@ contract GoingUpProjects {
         require(
             msg.sender == project.owner ||
                 (project.allowMembersToEdit &&
-                    membersMapping[projectId].contains(msg.sender)),
+                    membersByAddressMapping[msg.sender].contains(projectId)),
             "cannot edit project"
         );
         _;
@@ -433,8 +436,8 @@ contract GoingUpProjects {
             extraData: ""
         });
 
-        invitesMapping.set(projectId, memberRecordId);
-        invitesByAddressMapping.set(member, memberRecordId);
+        invitesMapping[projectId].add(memberRecordId);
+        invitesByAddressMapping[member].add(memberRecordId);
         emit InviteMember(projectId, msg.sender, member);
     }
 
@@ -455,11 +458,9 @@ contract GoingUpProjects {
         public
         canEditProject(projectId)
     {
-        invitesMapping.remove(projectId, memberRecordId);
-        invitesByAddressMapping.remove(
-            projectMemberStorage[memberRecordId].member,
-            memberRecordId
-        );
+        invitesMapping[projectId].remove(memberRecordId);
+        invitesByAddressMapping[projectMemberStorage[memberRecordId].member]
+            .remove(memberRecordId);
 
         emit DisinviteMember(projectId, msg.sender, memberRecordId);
     }
@@ -471,18 +472,7 @@ contract GoingUpProjects {
         view
         returns (uint256[] memory)
     {
-        uint256[] memory memberRecordIds;
-
-        for (
-            uint256 i = 0;
-            i < invitesByAddressMapping.get(member).length;
-            i++
-        ) {
-            uint256 memberRecordId = invitesByAddressMapping.get(member)[i];
-            memberRecordIds.push(memberRecordId);
-        }
-
-        return memberRecordIds;
+        return invitesByAddressMapping[member].values();
     }
 
     /// @notice isAddressInvitedToProject returns true if address is invited to project
@@ -620,36 +610,42 @@ contract GoingUpProjects {
         view
         returns (uint256[] memory)
     {
-        return projectsByAddressMapping[member].values();
+        uint256[] memory projectIds;
+
+        for (
+            uint256 i = 0;
+            i < membersByAddressMapping.get(member).length;
+            i++
+        ) {
+            uint256 memberRecordId = membersByAddressMapping.get(member)[i];
+            projectIds.push(projectMemberStorage[memberRecordId].projectId);
+        }
     }
 
     /// @notice This event is emitted when a project owner sets a member's goal as achieved
     /// @param projectId Project ID
     /// @param setAsAchievedBy Authorized address setting the member's goal as achieved
-    /// @param member Member address
+    /// @param memberRecordId Member record ID
     event SetMemberGoalAsAchieved(
         uint256 indexed projectId,
         address setAsAchievedBy,
-        address member
+        uint256 memberRecordId
     );
 
     /// @notice Set member's goal as achieved
     /// @param projectId Project ID
-    /// @param member Member address
-    function setMemberGoalAsAchieved(uint256 projectId, address member)
+    /// @param memberRecordId Member record ID
+    function setMemberGoalAsAchieved(uint256 projectId, uint256 memberRecordId)
         public
         canEditProject(projectId)
     {
         require(
-            membersMapping[projectId].contains(member),
-            "not a member of project"
+            projectMemberStorage[memberRecordId].projectId == projectId,
+            "member record id does not match project id"
         );
-        require(
-            !projectMemberMapping[projectId][member].goalAchieved,
-            "goal already achieved"
-        );
-        projectMemberMapping[projectId][member].goalAchieved = true;
-        emit SetMemberGoalAsAchieved(projectId, msg.sender, member);
+
+        projectMemberStorage[memberRecordId].goalAchieved = true;
+        emit SetMemberGoalAsAchieved(projectId, msg.sender, memberRecordId);
     }
 
     /// @notice This event is emitted when an admin address sets a member's reward as verified
@@ -664,25 +660,18 @@ contract GoingUpProjects {
 
     /// @notice Set member's reward as verified
     /// @param projectId Project ID
-    /// @param member Member address
-    function setMemberRewardAsVerified(uint256 projectId, address member)
+    /// @param memberRecordId Member record ID
+    function setMemberRewardAsVerified(uint256 projectId, uint256 memberRecordId)
         public
         onlyAdmin
     {
         require(
-            membersMapping[projectId].contains(member),
-            "not a member of project"
+            projectMemberStorage[memberRecordId].projectId == projectId,
+            "member record id does not match project id"
         );
-        require(
-            projectMemberMapping[projectId][member].goalAchieved,
-            "goal not achieved"
-        );
-        require(
-            !projectMemberMapping[projectId][member].rewardVerified,
-            "reward already verified"
-        );
-        projectMemberMapping[projectId][member].rewardVerified = true;
-        emit SetMemberRewardAsVerified(projectId, msg.sender, member);
+
+        projectMemberStorage[memberRecordId].rewardVerified = true;
+        emit SetMemberRewardAsVerified(projectId, msg.sender, memberRecordId);
     }
 
     /// @notice Get project members
@@ -699,10 +688,12 @@ contract GoingUpProjects {
     /// @param projectId Project ID
     /// @param addedBy Address who adds the project member
     /// @param member Member address added to project
+    /// @param memberRecordId Member record ID
     event ManuallyAddMember(
         uint256 indexed projectId,
         address addedBy,
-        address member
+        address member,
+        uint256 memberRecordId
     );
 
     /// @notice Manually add member to project (only accessible to contract owner or admin)
@@ -717,11 +708,24 @@ contract GoingUpProjects {
         string calldata goal,
         string calldata rewardData
     ) public onlyAdmin {
-        membersMapping[projectId].add(member);
-        projectMemberMapping[projectId][member].role = role;
-        projectMemberMapping[projectId][member].goal = goal;
-        projectMemberMapping[projectId][member].rewardData = rewardData;
-        emit ManuallyAddMember(projectId, msg.sender, member);
+        projectMemberCounter.increment();
+        uint256 memberRecordId = projectMemberCounter.current();
+
+        projectMemberStorage[memberRecordId] = ProjectMember({
+            id: memberRecordId,
+            projectId: projectId,
+            member: member,
+            role: role,
+            goal: goal,
+            rewardData: rewardData,
+            inviteAccepted: true,
+            goalAchieved: false,
+            rewardVerified: false,
+            extraData: ""
+        });
+
+        membersMapping.set(projectId, memberRecordId);
+        membersByAddressMapping.set(member, memberRecordId);
     }
 
     /// @notice This event is emitted when an authorized address sets project extra data
@@ -752,28 +756,29 @@ contract GoingUpProjects {
     /// @notice This event is emitted when an authorized address sets project member's extra data
     /// @param projectId Project ID
     /// @param setBy Authorized address adding extra data
-    /// @param member Member address
+    /// @param memberRecordId Member record ID
     event SetProjectMemberExtraData(
         uint256 indexed projectId,
         address setBy,
-        address member
+        uint256 memberRecordId
     );
 
     /// @notice Set project member's extra data
     /// @param projectId Project ID
-    /// @param member Member address
+    /// @param memberRecordId Member record ID
     /// @param data Extra data string
     function setProjectMemberExtraData(
         uint256 projectId,
-        address member,
+        uint256 memberRecordId,
         string memory data
     ) public canEditProject(projectId) {
         require(
-            membersMapping[projectId].contains(member),
-            "not a member of project"
+            projectMemberStorage[memberRecordId].projectId == projectId,
+            "member record id does not match project id"
         );
-        projectMemberMapping[projectId][member].extraData = data;
-        emit SetProjectMemberExtraData(projectId, msg.sender, member);
+
+        projectMemberStorage[memberRecordId].extraData = data;
+        emit SetProjectMemberExtraData(projectId, msg.sender, memberRecordId);
     }
 
     /// @notice This event is emitted when a score and/or comment is added to a project
