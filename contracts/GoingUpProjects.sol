@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
 /// @title GoingUP Platform Projects Smart Contract
@@ -21,7 +20,6 @@ contract GoingUpProjects {
         string tags;
         address owner;
         bool active;
-        bool allowMembersToEdit;
         bool isPrivate;
     }
 
@@ -32,7 +30,6 @@ contract GoingUpProjects {
         string role;
         string goal;
         string rewardData; // json format
-        bool inviteAccepted;
         bool goalAchieved;
         bool rewardVerified;
         string extraData;
@@ -40,8 +37,6 @@ contract GoingUpProjects {
 
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
-    using EnumerableMap for EnumerableMap.UintToUintMap;
-    using EnumerableMap for EnumerableMap.AddressToUintMap;
     using Counters for Counters.Counter;
 
     constructor() {
@@ -152,9 +147,6 @@ contract GoingUpProjects {
             _price = addMemberPrice;
         }
 
-        uint256 invitesCount = 0;
-
-
         if (
             invitesMapping[projectId].length() +
                 membersMapping[projectId].length() +
@@ -201,12 +193,7 @@ contract GoingUpProjects {
 
     modifier canEditProject(uint256 projectId) {
         Project memory project = projects[projectId];
-        require(
-            msg.sender == project.owner ||
-                (project.allowMembersToEdit &&
-                    membersByAddressMapping[msg.sender].contains(projectId)),
-            "cannot edit project"
-        );
+        require(msg.sender == project.owner, "cannot edit project");
         _;
     }
 
@@ -247,7 +234,6 @@ contract GoingUpProjects {
             tags: tags,
             owner: msg.sender,
             active: true,
-            allowMembersToEdit: false,
             isPrivate: isPrivate
         });
 
@@ -369,36 +355,6 @@ contract GoingUpProjects {
         emit SetProjectPublic(projectId, msg.sender);
     }
 
-    /// @notice This event is emitted when project owner allows members to edit project
-    /// @param projectId Project ID
-    /// @param allowedBy Current owner address allowing edits by members
-    event AllowMembersToEdit(uint256 indexed projectId, address allowedBy);
-
-    /// @notice Allows members to edit updateable portions of project (only accessible to project owner)
-    /// @param projectId Project ID
-    function allowMembersToEdit(uint256 projectId)
-        public
-        onlyProjectOwner(projectId)
-    {
-        projects[projectId].allowMembersToEdit = true;
-        emit AllowMembersToEdit(projectId, msg.sender);
-    }
-
-    /// @notice This event is emitted when project owner disallows members to edit project
-    /// @param projectId Project ID
-    /// @param allowedBy Current owner address allowing edits by members
-    event DisallowMembersToEdit(uint256 indexed projectId, address allowedBy);
-
-    /// @notice Allows members to edit updateable portions of project (only accessible to project owner)
-    /// @param projectId Project ID
-    function disallowMembersToEdit(uint256 projectId)
-        public
-        onlyProjectOwner(projectId)
-    {
-        projects[projectId].allowMembersToEdit = false;
-        emit DisallowMembersToEdit(projectId, msg.sender);
-    }
-
     /// @notice This event is emitted when an authorized address invites an address to be a project member
     /// @param projectId Project ID
     /// @param from Authorized address issuing the invitation
@@ -423,22 +379,24 @@ contract GoingUpProjects {
         projectMemberCounter.increment();
         uint256 memberRecordId = projectMemberCounter.current();
 
-        projectMemberStorage[memberRecordId] = ProjectMember({
-            id: memberRecordId,
-            projectId: projectId,
-            member: member,
-            role: role,
-            goal: goal,
-            rewardData: rewardData,
-            inviteAccepted: false,
-            goalAchieved: false,
-            rewardVerified: false,
-            extraData: ""
-        });
+        ProjectMember memory newMember;
 
-        invitesMapping[projectId].add(memberRecordId);
-        invitesByAddressMapping[member].add(memberRecordId);
+        newMember.id = memberRecordId;
+        newMember.projectId = projectId;
+        newMember.member = member;
+        newMember.role = role;
+        newMember.goal = goal;
+        newMember.rewardData = rewardData;
+
+        projectMemberStorage[memberRecordId] = newMember;
+
+        addInvitation(memberRecordId);
         emit InviteMember(projectId, msg.sender, member);
+    }
+
+    function addInvitation(uint256 memberRecordId) private {
+        invitesMapping[projectMemberStorage[memberRecordId].projectId].add(memberRecordId);
+        invitesByAddressMapping[projectMemberStorage[memberRecordId].member].add(memberRecordId);
     }
 
     /// @notice This event is emitted when an authorized address disinvites a pending invite
@@ -489,7 +447,11 @@ contract GoingUpProjects {
     /// @param projectId Project ID
     /// @param member Address that accepted the invitation
     /// @param memberRecordId Member record ID
-    event AcceptProjectInvitation(uint256 indexed projectId, address member, uint256 memberRecordId);
+    event AcceptProjectInvitation(
+        uint256 indexed projectId,
+        address member,
+        uint256 memberRecordId
+    );
 
     /// @notice Accept invitation to become a member of the project
     /// @param memberRecordId Member record ID
@@ -501,10 +463,7 @@ contract GoingUpProjects {
 
         uint256 projectId = projectMemberStorage[memberRecordId].projectId;
         bool isInvited = invitesMapping[projectId].contains(memberRecordId);
-        require(
-            isInvited,
-            "not invited to project"
-        );
+        require(isInvited, "not invited to project");
 
         invitesMapping[projectId].remove(memberRecordId);
         invitesByAddressMapping[msg.sender].remove(memberRecordId);
@@ -623,10 +582,10 @@ contract GoingUpProjects {
     /// @notice Set member's reward as verified
     /// @param projectId Project ID
     /// @param memberRecordId Member record ID
-    function setMemberRewardAsVerified(uint256 projectId, uint256 memberRecordId)
-        public
-        onlyAdmin
-    {
+    function setMemberRewardAsVerified(
+        uint256 projectId,
+        uint256 memberRecordId
+    ) public onlyAdmin {
         require(
             projectMemberStorage[memberRecordId].projectId == projectId,
             "member record id does not match project id"
@@ -680,7 +639,6 @@ contract GoingUpProjects {
             role: role,
             goal: goal,
             rewardData: rewardData,
-            inviteAccepted: true,
             goalAchieved: false,
             rewardVerified: false,
             extraData: ""
