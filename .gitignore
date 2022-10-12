@@ -1,5 +1,9 @@
 artifacts
 cache
+.deps
+docs
+contracts/artifacts
+
 
 # Logs
 logs
