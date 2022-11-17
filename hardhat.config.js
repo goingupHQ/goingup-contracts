@@ -1,15 +1,7 @@
+require('dotenv').config();
 require('@nomiclabs/hardhat-waffle');
+require('@openzeppelin/hardhat-upgrades');
 require('hardhat-docgen');
-
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
-task('accounts', 'Prints the list of accounts', async (taskArgs, hre) => {
-    const accounts = await hre.ethers.getSigners();
-
-    for (const account of accounts) {
-        console.log(account.address);
-    }
-});
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -25,18 +17,6 @@ module.exports = {
     solidity: {
         compilers: [
             {
-                version: '0.8.14',
-            },
-            {
-                version: '0.8.15',
-                settings: {
-                    optimizer: {
-                        enabled: true,
-                        runs: 200
-                    }
-                },
-            },
-            {
                 version: '0.8.17',
                 settings: {
                     optimizer: {
@@ -51,5 +31,22 @@ module.exports = {
         path: './docs/',
         clear: true,
         runOnCompile: true
-    }
+    },
+    networks: {
+        goerli: {
+            url: process.env.ALCHEMY_URL_GOERLI,
+            accounts: [process.env.DEPLOYER_PK],
+        },
+        mumbai: {
+            url: process.env.ALCHEMY_URL_MUMBAI,
+            accounts: [process.env.DEPLOYER_PK],
+        },
+        polygon: {
+            url: process.env.ALCHEMY_URL_POLYGON,
+            accounts: [process.env.DEPLOYER_PK],
+        }
+    },
+    etherscan: {
+        apiKey: process.env.ETHERSCAN_API_KEY,
+    },
 };
