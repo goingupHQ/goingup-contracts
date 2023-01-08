@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/EnumerableSet.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // @title GoingUP Platform Accounts Smart Contract
 // @author Mark Ibanez - mark.ibanez@gmail.com (github)
@@ -71,9 +71,9 @@ contract GoingUpAccounts is AccessControl {
     /// @dev This function clears all addresses previously assigned to the handle
     function assignHandle(string memory handle, address addr) public onlyAdmin {
         for (uint256 i = 0; i < userAddresses[handle].length(); i++) {
+            userAddresses[handle].remove(userAddresses[handle].at(i));
             emit AddressListModified(handle, userAddresses[handle].at(i), "remove");
         }
-        userAddresses[handle].clear();
 
         userAddresses[handle].add(addr);
         emit AddressListModified(handle, addr, "add");
