@@ -1,7 +1,6 @@
 require('dotenv').config();
-require('@nomiclabs/hardhat-waffle');
-require('@openzeppelin/hardhat-upgrades');
-require('hardhat-docgen');
+// require('@nomiclabs/hardhat-waffle');
+// require('hardhat-docgen');
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -27,11 +26,11 @@ module.exports = {
             },
         ]
     },
-    docgen: {
-        path: './docs/',
-        clear: true,
-        runOnCompile: true
-    },
+    // docgen: {
+    //     path: './docs/',
+    //     clear: true,
+    //     runOnCompile: true
+    // },
     networks: {
         goerli: {
             url: process.env.ALCHEMY_URL_GOERLI,
