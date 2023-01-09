@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('@openzeppelin/hardhat-upgrades');
 // require('@nomiclabs/hardhat-waffle');
 // require('hardhat-docgen');
 
@@ -36,16 +37,24 @@ module.exports = {
             url: process.env.ALCHEMY_URL_GOERLI,
             accounts: [process.env.DEPLOYER_PK],
         },
-        mumbai: {
+        polygonMumbai: {
             url: process.env.ALCHEMY_URL_MUMBAI,
             accounts: [process.env.DEPLOYER_PK],
         },
         polygon: {
             url: process.env.ALCHEMY_URL_POLYGON,
             accounts: [process.env.DEPLOYER_PK],
-        }
+        },
     },
     etherscan: {
-        apiKey: process.env.ETHERSCAN_API_KEY,
+        apiKey: {
+            // ethereum
+            mainnet: process.env.ETHERSCAN_API_KEY,
+            goerli: process.env.ETHERSCAN_API_KEY,
+
+            // polygon
+            polygonMumbai: process.env.POLYGONSCAN_API_KEY,
+            polygon: process.env.POLYGONSCAN_API_KEY,
+        }
     },
 };
