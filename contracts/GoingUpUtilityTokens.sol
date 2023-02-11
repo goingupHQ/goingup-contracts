@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
+// Author: Mark Ibanez
+// Email: mark.ibanez@gmail.com
+// Github: https://github.com/markibanez
 pragma solidity ^0.8.15;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
