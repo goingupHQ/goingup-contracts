@@ -45,6 +45,10 @@ module.exports = {
             url: process.env.ALCHEMY_URL_POLYGON,
             accounts: [process.env.DEPLOYER_PK],
         },
+        xrplDevnet: {
+            url: 'https://rpc-evm-sidechain.xrpl.org',
+            accounts: [process.env.DEPLOYER_PK],
+        }
     },
     etherscan: {
         apiKey: {
