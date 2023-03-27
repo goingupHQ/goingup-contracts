@@ -4,22 +4,24 @@
 // Github: https://github.com/markibanez
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
-import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Pausable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
 import "operator-filter-registry/src/DefaultOperatorFilterer.sol";
 
-contract GoingUpEventTokens is
-    ERC1155,
-    AccessControl,
-    ERC1155Pausable,
-    ERC1155Supply,
-    ReentrancyGuard,
+contract GoingUpEventTokensV1 is
+    Initializable,
+    ERC1155Upgradeable,
+    AccessControlUpgradeable,
+    ERC1155PausableUpgradeable,
+    ERC1155SupplyUpgradeable,
+    ReentrancyGuardUpgradeable,
     DefaultOperatorFilterer
 {
     struct TokenSetting {
@@ -32,15 +34,13 @@ contract GoingUpEventTokens is
         uint256 maxPerAddress;
     }
 
-    string private _contractURI =
-        "ipfs://QmYWnXmp5wLUeCNHsrS3PLtnFBXhEwpnKvmRhrjYY3id2J";
-
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     mapping(uint256 => TokenSetting) public tokenSettings;
 
-    constructor() ERC1155("https://app.goingup.xyz/api/1155-metadata/") {
+    function initialize() public initializer {
+        __ERC1155_init("");
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(MINTER_ROLE, msg.sender);
         _setupRole(PAUSER_ROLE, msg.sender);
@@ -149,7 +149,11 @@ contract GoingUpEventTokens is
         return ts.metadataURI;
     }
 
-    function setContractURI(string calldata _uri) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    string private _contractURI = "";
+
+    function setContractURI(
+        string calldata _uri
+    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
         _contractURI = _uri;
     }
 
@@ -165,7 +169,7 @@ contract GoingUpEventTokens is
         address _tokenContract,
         uint256 _amount
     ) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrant {
-        IERC20 tokenContract = IERC20(_tokenContract);
+        IERC20Upgradeable tokenContract = IERC20Upgradeable(_tokenContract);
         tokenContract.transfer(msg.sender, _amount);
     }
 
@@ -173,7 +177,7 @@ contract GoingUpEventTokens is
         address _tokenContract,
         uint256 _tokenID
     ) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrant {
-        IERC721 tokenContract = IERC721(_tokenContract);
+        IERC721Upgradeable tokenContract = IERC721Upgradeable(_tokenContract);
         tokenContract.safeTransferFrom(address(this), msg.sender, _tokenID);
     }
 
@@ -183,7 +187,7 @@ contract GoingUpEventTokens is
         uint256 _amount,
         bytes memory _data
     ) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrant {
-        IERC1155 tokenContract = IERC1155(_tokenContract);
+        IERC1155Upgradeable tokenContract = IERC1155Upgradeable(_tokenContract);
         tokenContract.safeTransferFrom(
             address(this),
             msg.sender,
@@ -200,13 +204,13 @@ contract GoingUpEventTokens is
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    ) internal override(ERC1155, ERC1155Supply, ERC1155Pausable) {
+    ) internal override(ERC1155Upgradeable, ERC1155SupplyUpgradeable, ERC1155PausableUpgradeable) {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(ERC1155, AccessControl) returns (bool) {
+    ) public view virtual override(ERC1155Upgradeable, AccessControlUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
