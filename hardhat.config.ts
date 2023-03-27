@@ -1,19 +1,13 @@
-require('dotenv').config();
-require('@openzeppelin/hardhat-upgrades');
-// require('@nomiclabs/hardhat-waffle');
-// require('hardhat-docgen');
+import * as dotenv from 'dotenv';
+dotenv.config({ path: __dirname + '/.env' });
 
-/**
- * @type import('hardhat/config').HardhatUserConfig
- */
-module.exports = {
-    networks: {
-        hardhat: {
-            accounts: {
-                count: 200,
-            },
-        },
-    },
+import '@openzeppelin/hardhat-upgrades';
+import '@nomiclabs/hardhat-ethers';
+import '@nomicfoundation/hardhat-toolbox';
+import '@typechain/hardhat';
+import { HardhatUserConfig } from 'hardhat/config';
+
+const config: HardhatUserConfig = {
     solidity: {
         compilers: [
             {
@@ -27,29 +21,30 @@ module.exports = {
             },
         ]
     },
-    // docgen: {
-    //     path: './docs/',
-    //     clear: true,
-    //     runOnCompile: true
-    // },
     networks: {
+        hardhat: {
+            accounts: {
+                count: 200,
+            },
+        },
         goerli: {
             url: process.env.ALCHEMY_URL_GOERLI,
-            accounts: [process.env.DEPLOYER_PK],
+            accounts: [process.env.DEPLOYER_PK!],
         },
         polygonMumbai: {
             url: process.env.ALCHEMY_URL_MUMBAI,
-            accounts: [process.env.DEPLOYER_PK],
+            accounts: [process.env.DEPLOYER_PK!],
         },
         polygon: {
             url: process.env.ALCHEMY_URL_POLYGON,
-            accounts: [process.env.DEPLOYER_PK],
+            accounts: [process.env.DEPLOYER_PK!],
         },
         xrplDevnet: {
             url: 'https://rpc-evm-sidechain.xrpl.org',
-            accounts: [process.env.DEPLOYER_PK],
+            accounts: [process.env.DEPLOYER_PK!],
         }
     },
+    // @ts-ignore
     etherscan: {
         apiKey: {
             // ethereum
@@ -61,4 +56,10 @@ module.exports = {
             polygon: process.env.POLYGONSCAN_API_KEY,
         }
     },
+    typechain: {
+        outDir: 'typechain',
+        target: 'ethers-v5',
+    }
 };
+
+export default config;
