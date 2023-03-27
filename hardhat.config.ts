@@ -28,14 +28,17 @@ const config: HardhatUserConfig = {
             },
         },
         goerli: {
+            chainId: 5,
             url: process.env.ALCHEMY_URL_GOERLI,
             accounts: [process.env.DEPLOYER_PK!],
         },
         polygonMumbai: {
+            chainId: 80001,
             url: process.env.ALCHEMY_URL_MUMBAI,
             accounts: [process.env.DEPLOYER_PK!],
         },
         polygon: {
+            chainId: 137,
             url: process.env.ALCHEMY_URL_POLYGON,
             accounts: [process.env.DEPLOYER_PK!],
         },
@@ -48,12 +51,12 @@ const config: HardhatUserConfig = {
     etherscan: {
         apiKey: {
             // ethereum
-            mainnet: process.env.ETHERSCAN_API_KEY,
-            goerli: process.env.ETHERSCAN_API_KEY,
+            mainnet: process.env.ETHERSCAN_API_KEY!,
+            goerli: process.env.ETHERSCAN_API_KEY!,
 
             // polygon
-            polygonMumbai: process.env.POLYGONSCAN_API_KEY,
-            polygon: process.env.POLYGONSCAN_API_KEY,
+            polygonMumbai: process.env.POLYGONSCAN_API_KEY!,
+            polygon: process.env.POLYGONSCAN_API_KEY!,
         }
     },
     typechain: {
