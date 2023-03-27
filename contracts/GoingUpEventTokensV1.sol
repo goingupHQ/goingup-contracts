@@ -13,7 +13,7 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
-import "operator-filter-registry/src/DefaultOperatorFilterer.sol";
+import "operator-filter-registry/src/upgradeable/DefaultOperatorFiltererUpgradeable.sol";
 
 contract GoingUpEventTokensV1 is
     Initializable,
@@ -22,7 +22,7 @@ contract GoingUpEventTokensV1 is
     ERC1155PausableUpgradeable,
     ERC1155SupplyUpgradeable,
     ReentrancyGuardUpgradeable,
-    DefaultOperatorFilterer
+    DefaultOperatorFiltererUpgradeable
 {
     struct TokenSetting {
         string description;
@@ -90,7 +90,6 @@ contract GoingUpEventTokensV1 is
     );
 
     function mint(
-        address account,
         uint256 tokenID,
         uint256 qty,
         bool hasExtraData,
@@ -117,14 +116,14 @@ contract GoingUpEventTokensV1 is
 
         require(
             ts.maxPerAddress == 0 ||
-                ts.maxPerAddress >= balanceOf(account, tokenID) + qty,
+                ts.maxPerAddress >= balanceOf(msg.sender, tokenID) + qty,
             "Max per address reached"
         );
 
-        _mint(account, tokenID, qty, "");
+        _mint(msg.sender, tokenID, qty, "");
 
         if (hasExtraData)
-            emit WriteMintData(tokenID, account, msg.sender, data);
+            emit WriteMintData(tokenID, msg.sender, msg.sender, data);
     }
 
     function manualMint(
@@ -149,7 +148,7 @@ contract GoingUpEventTokensV1 is
         return ts.metadataURI;
     }
 
-    string private _contractURI = "";
+    string private _contractURI;
 
     function setContractURI(
         string calldata _uri
