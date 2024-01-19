@@ -1,4 +1,11 @@
 {
+  "ts-node": {
+    // these options are overrides used only by ts-node
+    // same as the --compilerOptions flag and the TS_NODE_COMPILER_OPTIONS environment variable
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  },
   "compilerOptions": {
     "target": "es2020",
     "module": "commonjs",
@@ -8,6 +15,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["./hardhat.config.ts", "./scripts", "./test"],
+  "include": ["./hardhat.config.ts", "./scripts", "./test", "environment.d.ts"],
   "files": ["./hardhat.config.ts"]
 }
